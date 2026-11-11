@@ -67,6 +67,7 @@ mdk/*.log
 
 # Keil per-user state and J-Link session scratch
 mdk/*.uvguix.*
+mdk/*.uvoptx
 mdk/JLinkLog.txt
 mdk/JLinkSettings.ini
 
