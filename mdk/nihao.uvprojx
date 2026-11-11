@@ -427,6 +427,11 @@
           <FilePath>..\third_party\zephyr\drivers\gpio\gpio_stm32.c</FilePath>
         </File>
         <File>
+          <FileName>led_gpio.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\third_party\zephyr\drivers\led\led_gpio.c</FilePath>
+        </File>
+        <File>
           <FileName>pinctrl_stm32.c</FileName>
           <FileType>1</FileType>
           <FilePath>..\third_party\zephyr\drivers\pinctrl\pinctrl_stm32.c</FilePath>

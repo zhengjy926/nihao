@@ -8,7 +8,7 @@
 
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
-#include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/led.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/irq.h>
 #include <zephyr/logging/log.h>
@@ -28,7 +28,7 @@ LOG_MODULE_REGISTER(nihao, CONFIG_LOG_DEFAULT_LEVEL);
 #define BLINK_MS 500
 #define RX_IDLE_TIMEOUT_US 1000
 
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
+static const struct led_dt_spec led = LED_DT_SPEC_GET(LED0_NODE);
 static const struct device *const console = DEVICE_DT_GET(CONSOLE_NODE);
 
 static uint8_t rx_buf[2][RX_BUF_SIZE];
@@ -125,8 +125,8 @@ int main(void)
 		device_is_ready(console) ? "ready" : "NOT ready",
 		DT_PROP(CONSOLE_NODE, current_speed));
 
-	if (!device_is_ready(led.port)) {
-		LOG_ERR("led0 port not ready");
+	if (!led_is_ready_dt(&led)) {
+		LOG_ERR("led0 device not ready");
 		for (;;) {
 		}
 	}
@@ -143,15 +143,17 @@ int main(void)
 		}
 	}
 
-	gpio_pin_configure_dt(&led, GPIO_OUTPUT_INACTIVE);
-
 	uint32_t toggles = 0;
 
 	for (;;) {
 		nihao_work_poll();
 		echo_pump();
 
-		gpio_pin_toggle_dt(&led);
+		if ((toggles % 2u) == 0u) {
+			led_on_dt(&led);
+		} else {
+			led_off_dt(&led);
+		}
 		toggles++;
 
 		if ((toggles % 2u) == 0u) {

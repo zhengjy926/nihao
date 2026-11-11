@@ -43,6 +43,7 @@ case K_OBJ_SENSOR_DECODER_API: ret = "sensor_decoder_api"; break;
 /* Driver subsystems */
 case K_OBJ_DRIVER_DMA: ret = "dma driver"; break;
 case K_OBJ_DRIVER_GPIO: ret = "gpio driver"; break;
+case K_OBJ_DRIVER_LED: ret = "led driver"; break;
 case K_OBJ_DRIVER_RESET: ret = "reset driver"; break;
 case K_OBJ_DRIVER_SHARED_IRQ: ret = "shared_irq driver"; break;
 case K_OBJ_DRIVER_AUDIO_CODEC: ret = "audio_codec driver"; break;
@@ -87,7 +88,6 @@ case K_OBJ_DRIVER_I2C_TARGET: ret = "i2c_target driver"; break;
 case K_OBJ_DRIVER_I2S: ret = "i2s driver"; break;
 case K_OBJ_DRIVER_I3C: ret = "i3c driver"; break;
 case K_OBJ_DRIVER_IPM: ret = "ipm driver"; break;
-case K_OBJ_DRIVER_LED: ret = "led driver"; break;
 case K_OBJ_DRIVER_LED_STRIP: ret = "led_strip driver"; break;
 case K_OBJ_DRIVER_LIN: ret = "lin driver"; break;
 case K_OBJ_DRIVER_LORA: ret = "lora driver"; break;

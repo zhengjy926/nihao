@@ -28,6 +28,7 @@ ZEPHYR_FILES = (
     "kernel/device.c",
     "drivers/gpio/gpio_stm32.c",
     "drivers/gpio/gpio_stm32.h",
+    "drivers/led/led_gpio.c",
     "drivers/pinctrl/pinctrl_stm32.c",
     "drivers/clock_control/clock_stm32f2_f4_f7.c",
     "drivers/clock_control/clock_stm32_ll_common.c",

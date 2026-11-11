@@ -31,6 +31,7 @@ Individual files:
 
 - `zephyr/kernel/device.c`
 - `zephyr/drivers/gpio/gpio_stm32.c`, `gpio_stm32.h`
+- `zephyr/drivers/led/led_gpio.c`
 - `zephyr/drivers/pinctrl/pinctrl_stm32.c`
 - `zephyr/drivers/clock_control/clock_stm32f2_f4_f7.c`, `clock_stm32_ll_common.c`, `clock_stm32_ll_common.h`
 - `zephyr/drivers/interrupt_controller/intc_gpio_stm32.c`, `intc_exti_stm32.c`, `intc_exti_stm32_priv.h`

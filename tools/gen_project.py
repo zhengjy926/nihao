@@ -42,6 +42,7 @@ GROUPS = {
     ],
     "zephyr/drivers": [
         ("gpio_stm32.c", 1, r"..\third_party\zephyr\drivers\gpio\gpio_stm32.c"),
+        ("led_gpio.c", 1, r"..\third_party\zephyr\drivers\led\led_gpio.c"),
         ("pinctrl_stm32.c", 1, r"..\third_party\zephyr\drivers\pinctrl\pinctrl_stm32.c"),
         ("clock_stm32f2_f4_f7.c", 1,
          r"..\third_party\zephyr\drivers\clock_control\clock_stm32f2_f4_f7.c"),
