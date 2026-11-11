@@ -30,16 +30,40 @@
 
 static bool dwt_running;
 
+/*
+ * The wrap high word is shared state: cycles() is called from the main loop and
+ * from interrupt context (the UART driver arms work items from its IDLE and DMA
+ * interrupts). Mask interrupts across each read/update pair, otherwise a nested
+ * call can count the same 32-bit wrap twice or miss one. The saved PRIMASK is
+ * restored instead of unconditionally enabling, so this nests inside irq_lock().
+ */
+static uint32_t irq_save(void)
+{
+	uint32_t key;
+
+	__asm volatile("MRS %0, PRIMASK" : "=r"(key));
+	__asm volatile("cpsid i" ::: "memory");
+
+	return key;
+}
+
+static void irq_restore(uint32_t key)
+{
+	__asm volatile("MSR PRIMASK, %0" :: "r"(key) : "memory");
+}
+
 static void dwt_enable(void)
 {
-	if (dwt_running) {
-		return;
+	uint32_t key = irq_save();
+
+	if (!dwt_running) {
+		DEMCR |= TRCENA;
+		DWT_CYCCNT = 0u;
+		DWT_CTRL |= CYCCNTENA;
+		dwt_running = true;
 	}
 
-	DEMCR |= TRCENA;
-	DWT_CYCCNT = 0u;
-	DWT_CTRL |= CYCCNTENA;
-	dwt_running = true;
+	irq_restore(key);
 }
 
 static uint64_t cycles(void)
@@ -47,16 +71,22 @@ static uint64_t cycles(void)
 	static uint32_t last;
 	static uint64_t high;
 	uint32_t now;
+	uint64_t value;
+	uint32_t key;
 
 	dwt_enable();
+
+	key = irq_save();
 	now = DWT_CYCCNT;
 
 	if (now < last) {
 		high += 1ull << 32;
 	}
 	last = now;
+	value = high | now;
+	irq_restore(key);
 
-	return high | now;
+	return value;
 }
 
 int64_t z_impl_k_uptime_ticks(void)

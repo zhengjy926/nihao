@@ -120,6 +120,14 @@ CYCLES_PER_TICK = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PE
 a short DMA burst is `K_TICKS(1)` = 100 µs; `main.c` asks for `K_USEC(1000)` =
 10 ticks.
 
+`cycles()` is called from both the main loop and interrupt context, and it keeps
+the counter's 32-bit wrap high word in `static` state, so the read/update pair
+runs inside a PRIMASK-masked critical section (`irq_save()`/`irq_restore()` in
+`kernel_shim.c`). The saved mask is restored rather than unconditionally enabled,
+so a call from inside `irq_lock()` stays locked; the section is a handful of
+cycles, which matters because `k_sleep_ticks()` and `k_sem_take()` call it in
+their spin loops.
+
 ### Execution
 
 `nihao_work_poll()` runs each due handler inline, in main context, to completion,
@@ -158,13 +166,6 @@ work queue and should not be grown into one without revisiting this section.
   nothing reports the failure. Symptom: bytes arrive on the UART, `irq` in the
   alive line climbs, but the application never gets `UART_RX_RDY` because the
   idle flush never fires. Raise `NIHAO_WORK_SLOTS`.
-- **`cycles()` is not reentrant.** It keeps its 32-bit-wrap high word in
-  `static` variables and is called from both contexts, so the two can straddle
-  the hardware counter's wrap (every ~23.9 s at 180 MHz) and count it twice or
-  not at all. Consequence is a ±23.9 s step in `k_uptime_get()`, i.e. one blink
-  period skipped or repeated; deadlines stay self-consistent because they are
-  computed from the same counter. Guard the read with a short critical section
-  if it ever has to be exact.
 - **64-bit `deadline` compare** is plain unsigned arithmetic; wrapping needs
   ~10^11 s of uptime.
 
@@ -249,6 +250,4 @@ the Keil build.
 
 1. Add a fault handler that can report through UART (the one thing that still
    loses all diagnostics).
-2. Make `cycles()` reentrancy-safe if `k_uptime_get()` ever has to be exact
-   (see the delayed-work section).
-3. Add `k_mutex`/`k_work` (non-delayable) shims once a driver needs them.
+2. Add `k_mutex`/`k_work` (non-delayable) shims once a driver needs them.
