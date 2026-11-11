@@ -10,13 +10,16 @@ import sys
 import time
 from pathlib import Path
 
-DEFAULT_UV4 = r"D:\Keil_v5\UV4\UV4.exe"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from toolchain import find_tool  # noqa: E402
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument("--uv4", default=DEFAULT_UV4)
+    parser.add_argument("--uv4", default=None,
+                        help="uVision UV4 executable (default: auto-detect)")
     parser.add_argument("--project", type=Path, default=None)
     parser.add_argument("--log", type=Path, default=None)
     parser.add_argument("--timeout", type=float, default=120.0)
@@ -25,7 +28,9 @@ def main() -> int:
     mdk = args.repo / "mdk"
     project = args.project or (mdk / "nihao.uvprojx")
     log = args.log or (mdk / "build.log")
-    uv4 = Path(args.uv4)
+    uv4 = Path(find_tool(
+        args.uv4, "UV4", "UV4",
+        (r"D:\Keil_v5\UV4\UV4.exe", r"C:\Keil_v5\UV4\UV4.exe")))
 
     if not uv4.exists():
         print(f"uVision not found: {uv4}", file=sys.stderr)

@@ -62,6 +62,20 @@ Zephyr's CMake needs the venv next to the Zephyr tree
 dependencies and configuration fails. `gen_config.py` picks the venv
 automatically; override with `--python`.
 
+## Host tool paths
+
+Different machines install CMake, uVision and the ARMCLANG toolchain in
+different directories. `tools/toolchain.py` resolves each tool in this order:
+
+1. the explicit flag (`--cmake`, `--uv4`, `--keil-root`)
+2. an environment variable (`CMAKE`, `UV4`, `ARMCLANG_TOOLCHAIN_PATH`)
+3. `shutil.which` on `PATH`
+4. a short list of known install locations
+
+Set the environment variable once per machine (or pass the flag ad hoc) when a
+tool lives somewhere unusual. Nothing machine-specific should be hard-coded in
+committed scripts.
+
 ## uVision batch builds
 
 `UV4.exe -b project.uvprojx -j0 -o build.log` can return before the log is

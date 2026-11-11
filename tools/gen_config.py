@@ -14,6 +14,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from toolchain import find_tool  # noqa: E402
+
 HEADERS = (
     "autoconf.h",
     "devicetree_generated.h",
@@ -38,11 +42,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--zephyr-base", default=os.environ.get("ZEPHYR_BASE", ""))
-    parser.add_argument("--keil-root", default=r"D:\Keil_v5\ARM\ARMCLANG")
+    parser.add_argument("--keil-root", default=None,
+                        help="ARMCLANG toolchain root (default: auto-detect)")
     parser.add_argument("--python", default=None,
                         help="Python interpreter used by Zephyr (defaults to the "
                              "venv next to the Zephyr tree)")
-    parser.add_argument("--cmake", default=r"D:\Program Files\CMake\bin\cmake.exe")
+    parser.add_argument("--cmake", default=None,
+                        help="cmake executable (default: auto-detect)")
     parser.add_argument("--board", default="f429igt6")
     args = parser.parse_args()
 
@@ -61,7 +67,22 @@ def main() -> int:
     build = repo / "build_cfg"
     out_dir = repo / "config_gen" / "4.5.0" / "zephyr"
     patch = repo / "tools" / "patches" / "0001-armclang-dts-preprocessor.patch"
-    cmake = Path(args.cmake)
+    keil_root = find_tool(
+        args.keil_root, "", "ARMCLANG_TOOLCHAIN_PATH",
+        (r"D:\Keil_v5\ARM\ARMCLANG", r"C:\Keil_v5\ARM\ARMCLANG"))
+    if not Path(keil_root).is_dir():
+        print("ARMCLANG toolchain not found; pass --keil-root or set "
+              "ARMCLANG_TOOLCHAIN_PATH", file=sys.stderr)
+        return 3
+
+    cmake = Path(find_tool(
+        args.cmake, "cmake", "CMAKE",
+        (r"D:\DevTools\CMake\bin\cmake.exe",
+         r"D:\Program Files\CMake\bin\cmake.exe",
+         r"C:\Program Files\CMake\bin\cmake.exe")))
+    if not (cmake.is_file() or shutil.which(str(cmake))):
+        print("cmake not found; pass --cmake or set CMAKE", file=sys.stderr)
+        return 3
 
     python = args.python
     if not python:
@@ -71,7 +92,7 @@ def main() -> int:
 
     env = os.environ.copy()
     env["ZEPHYR_BASE"] = str(zephyr)
-    env["ARMCLANG_TOOLCHAIN_PATH"] = args.keil_root
+    env["ARMCLANG_TOOLCHAIN_PATH"] = keil_root
 
     applied = False
     try:
@@ -93,7 +114,7 @@ def main() -> int:
             f"-DBOARD_ROOT={repo.as_posix()}",
             f"-DPython3_EXECUTABLE={Path(python).as_posix()}",
             "-DZEPHYR_TOOLCHAIN_VARIANT=armclang",
-            f"-DARMCLANG_TOOLCHAIN_PATH={Path(args.keil_root).as_posix()}",
+            f"-DARMCLANG_TOOLCHAIN_PATH={Path(keil_root).as_posix()}",
         ])
 
         run([str(cmake), "--build", build.as_posix(), "--target",
