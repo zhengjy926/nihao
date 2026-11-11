@@ -1,0 +1,6 @@
+board:
+  name: f429igt6
+  full_name: ALIENTEK Explorer STM32F429IGT6
+  vendor: alientek
+  socs:
+    - name: stm32f429xx

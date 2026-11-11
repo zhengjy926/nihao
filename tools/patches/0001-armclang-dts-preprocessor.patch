@@ -1,0 +1,39 @@
+diff --git a/cmake/compiler/armclang/generic.cmake b/cmake/compiler/armclang/generic.cmake
+index 0f12abce247..e5576a4a758 100644
+--- a/cmake/compiler/armclang/generic.cmake
++++ b/cmake/compiler/armclang/generic.cmake
+@@ -8,14 +8,26 @@ set(triple arm-arm-none-eabi)
+ 
+ find_package(armclang 6.17 REQUIRED)
+ 
+-set(CMAKE_DTS_PREPROCESSOR
+-      ${CMAKE_C_COMPILER}
+-      "--target=${triple}"
+-      # -march=armv6-m is added to silence the warnings:
+-      # 'armv4t' and 'arm7tdmi' is unsupported.
+-      # We only do preprocessing so the actual arch is not important.
+-      "-march=armv6-m"
+-)
++if(NOT CMAKE_DTS_PREPROCESSOR)
++  # Host-side devicetree preprocessing. armclang writes its preprocessed
++  # output through a format that python-devicetree cannot parse on this
++  # workstation, so use a Zephyr SDK GCC for this step only.
++  if(ZEPHYR_SDK_INSTALL_DIR)
++    find_program(CMAKE_DTS_PREPROCESSOR arm-zephyr-eabi-gcc
++      PATHS ${ZEPHYR_SDK_INSTALL_DIR}/gnu/arm-zephyr-eabi/bin NO_DEFAULT_PATH)
++  endif()
++endif()
++
++if(NOT CMAKE_DTS_PREPROCESSOR)
++  set(CMAKE_DTS_PREPROCESSOR
++        ${CMAKE_C_COMPILER}
++        "--target=${triple}"
++        # -march=armv6-m is added to silence the warnings:
++        # 'armv4t' and 'arm7tdmi' is unsupported.
++        # We only do preprocessing so the actual arch is not important.
++        "-march=armv6-m"
++  )
++endif()
+ 
+ set(CMAKE_C_COMPILER_TARGET   ${triple})
+ set(CMAKE_ASM_COMPILER_TARGET ${triple})

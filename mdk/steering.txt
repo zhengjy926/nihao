@@ -1,0 +1,2 @@
+RESOLVE _device_list_start AS Image$$ER_DEVICE$$Base
+RESOLVE _device_list_end AS Image$$ER_DEVICE$$Limit
