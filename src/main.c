@@ -10,8 +10,10 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/uart.h>
+#include <zephyr/irq.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/logging/log_ctrl.h>
+#include <zephyr/sys/ring_buffer.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/version.h>
 
@@ -31,9 +33,8 @@ static const struct device *const console = DEVICE_DT_GET(CONSOLE_NODE);
 
 static uint8_t rx_buf[2][RX_BUF_SIZE];
 static const uint8_t *volatile rx_free;
-static volatile uint8_t rx_ring[RX_RING_SIZE];
-static volatile uint32_t rx_head;
-static volatile uint32_t rx_tail;
+static uint8_t rx_ring_data[RX_RING_SIZE];
+static struct ring_buf rx_rb;
 static volatile bool tx_done = true;
 static volatile uint32_t echo_bytes;
 static volatile uint32_t echo_dropped;
@@ -61,18 +62,12 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 	case UART_RX_RDY: {
 		const uint8_t *data = evt->data.rx.buf + evt->data.rx.offset;
+		uint32_t len = evt->data.rx.len;
+		unsigned int key = irq_lock();
+		uint32_t written = ring_buf_put(&rx_rb, data, len);
 
-		for (size_t i = 0; i < evt->data.rx.len; i++) {
-			uint32_t head = rx_head;
-			uint32_t next = (head + 1u) % RX_RING_SIZE;
-
-			if (next == rx_tail) {
-				echo_dropped++;
-				break;
-			}
-			rx_ring[head] = data[i];
-			rx_head = next;
-		}
+		echo_dropped += len - written;
+		irq_unlock(key);
 		break;
 	}
 	case UART_TX_DONE:
@@ -87,13 +82,8 @@ static void echo_pump(void)
 {
 	uint8_t chunk[ECHO_CHUNK];
 
-	while (tx_done && rx_tail != rx_head) {
-		size_t n = 0;
-
-		while (rx_tail != rx_head && n < sizeof(chunk)) {
-			chunk[n++] = rx_ring[rx_tail];
-			rx_tail = (rx_tail + 1u) % RX_RING_SIZE;
-		}
+	while (tx_done && !ring_buf_is_empty(&rx_rb)) {
+		uint32_t n = ring_buf_get(&rx_rb, chunk, sizeof(chunk));
 
 		tx_done = false;
 		if (uart_tx(console, chunk, n, SYS_FOREVER_US) != 0) {
@@ -140,6 +130,8 @@ int main(void)
 		for (;;) {
 		}
 	}
+
+	ring_buf_init(&rx_rb, RX_RING_SIZE, rx_ring_data);
 
 	if (device_is_ready(console)) {
 		(void)uart_callback_set(console, uart_cb, NULL);
