@@ -57,6 +57,8 @@ __heap_limit
                 EXPORT  __Vectors_End
                 EXPORT  __Vectors_Size
 
+                IMPORT  sys_clock_isr              ; Zephyr system timer (SysTick)
+
 __Vectors       DCD     __initial_sp               ; Top of Stack
                 DCD     Reset_Handler              ; Reset Handler
                 DCD     NMI_Handler                ; NMI Handler
@@ -72,7 +74,7 @@ __Vectors       DCD     __initial_sp               ; Top of Stack
                 DCD     DebugMon_Handler           ; Debug Monitor Handler
                 DCD     0                          ; Reserved
                 DCD     PendSV_Handler             ; PendSV Handler
-                DCD     SysTick_Handler            ; SysTick Handler
+                DCD     sys_clock_isr              ; SysTick Handler (system timer)
 
                 ; External Interrupts
                 DCD     WWDG_IRQHandler                   ; Window WatchDog                                        

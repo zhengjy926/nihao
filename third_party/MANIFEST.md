@@ -39,12 +39,14 @@ Individual files:
 - `zephyr/drivers/reset/reset_stm32.c`
 - `zephyr/drivers/pinctrl/common.c`
 - `zephyr/drivers/dma/dma_stm32.c`, `dma_stm32_v1.c`, `dma_stm32.h`
+- `zephyr/drivers/timer/cortex_m_systick.c`, `system_timer_generic.h`
 - `zephyr/subsys/logging/log_core.c`, `log_msg.c`, `log_output.c`, `log_cache.c`, `log_cache.h`, `log_mgmt.c`
 - `zephyr/subsys/logging/backends/log_backend_uart.c`
 - `zephyr/lib/os/cbprintf.c`, `cbprintf_complete.c`, `cbprintf_packaged.c`, `printk.c`
 - `zephyr/lib/libc/armstdc/src/libc-hooks.c`
 - `modules/hal/stm32/stm32cube/stm32f4xx/soc/stm32f4xx.h`, `stm32f429xx.h`, `system_stm32f4xx.h`, `system_stm32f4xx.c`
 - `modules/hal/stm32/stm32cube/stm32f4xx/drivers/src/stm32f4xx_ll_dma.c`
+- `modules/hal/stm32/stm32cube/stm32f4xx/drivers/src/stm32f4xx_ll_utils.c`
 
 Everything in `third_party/` is read-only for this project. Any adaptation
 belongs in `port/`.

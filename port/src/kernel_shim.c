@@ -1,97 +1,34 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * Time services the logging subsystem needs. There is no scheduler and no
- * tick interrupt here, so uptime is derived from the DWT cycle counter and
- * "sleeping" is a bounded spin.
+ * Time services the logging subsystem needs. The time base is the upstream
+ * system timer driver (drivers/timer/cortex_m_systick.c): it owns SysTick, the
+ * cycle counter and the tick accounting, and port/src/sys_clock_glue.c supplies
+ * the kernel-side announce. There is still no scheduler, so "sleeping" is a
+ * bounded spin.
  */
 
 #include <errno.h>
 #include <stdint.h>
 
+#include <zephyr/drivers/timer/system_timer.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sleep.h>
 #include <zephyr/sys/util.h>
-
-#define DEMCR_ADDR 0xE000EDFCu
-#define DWT_CTRL_ADDR 0xE0001000u
-#define DWT_CYCCNT_ADDR 0xE0001004u
-
-#define DEMCR (*(volatile uint32_t *)DEMCR_ADDR)
-#define DWT_CTRL (*(volatile uint32_t *)DWT_CTRL_ADDR)
-#define DWT_CYCCNT (*(volatile uint32_t *)DWT_CYCCNT_ADDR)
-
-#define TRCENA BIT(24)
-#define CYCCNTENA BIT(0)
 
 #define CYCLES_PER_TICK                                                       \
 	((uint64_t)CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC /                       \
 	 (uint64_t)CONFIG_SYS_CLOCK_TICKS_PER_SEC)
 
-static bool dwt_running;
-
 /*
- * The wrap high word is shared state: cycles() is called from the main loop and
- * from interrupt context (the UART driver arms work items from its IDLE and DMA
- * interrupts). Mask interrupts across each read/update pair, otherwise a nested
- * call can count the same 32-bit wrap twice or miss one. The saved PRIMASK is
- * restored instead of unconditionally enabling, so this nests inside irq_lock().
+ * The system timer's cycle counter. It is the same 180 MHz that the old DWT
+ * path counted, but it is synthesized by the driver from SysTick (and extended
+ * to 64 bits by the timer core), so it keeps counting across a LOAD reload and
+ * needs no wrap bookkeeping here.
  */
-static uint32_t irq_save(void)
+static uint64_t clock_cycle_get(void)
 {
-	uint32_t key;
-
-	__asm volatile("MRS %0, PRIMASK" : "=r"(key));
-	__asm volatile("cpsid i" ::: "memory");
-
-	return key;
-}
-
-static void irq_restore(uint32_t key)
-{
-	__asm volatile("MSR PRIMASK, %0" :: "r"(key) : "memory");
-}
-
-static void dwt_enable(void)
-{
-	uint32_t key = irq_save();
-
-	if (!dwt_running) {
-		DEMCR |= TRCENA;
-		DWT_CYCCNT = 0u;
-		DWT_CTRL |= CYCCNTENA;
-		dwt_running = true;
-	}
-
-	irq_restore(key);
-}
-
-static uint64_t cycles(void)
-{
-	static uint32_t last;
-	static uint64_t high;
-	uint32_t now;
-	uint64_t value;
-	uint32_t key;
-
-	dwt_enable();
-
-	key = irq_save();
-	now = DWT_CYCCNT;
-
-	if (now < last) {
-		high += 1ull << 32;
-	}
-	last = now;
-	value = high | now;
-	irq_restore(key);
-
-	return value;
-}
-
-int64_t z_impl_k_uptime_ticks(void)
-{
-	return (int64_t)(cycles() / CYCLES_PER_TICK);
+	return sys_clock_cycle_get_64();
 }
 
 uint32_t nihao_timestamp_get(void)
@@ -110,10 +47,10 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 	}
 
 	ticks = (uint64_t)timeout.ticks;
-	start = cycles();
+	start = clock_cycle_get();
 	deadline = start + ticks * CYCLES_PER_TICK;
 
-	while (cycles() < deadline) {
+	while (clock_cycle_get() < deadline) {
 	}
 
 	return (k_ticks_t)ticks;
@@ -174,8 +111,8 @@ int z_impl_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
 		}
 
 		if (start == 0u) {
-			start = cycles();
-		} else if (cycles() - start > budget) {
+			start = clock_cycle_get();
+		} else if (clock_cycle_get() - start > budget) {
 			sem_timeouts++;
 			return -EBUSY;
 		}
@@ -277,7 +214,7 @@ int k_work_reschedule(struct k_work_delayable *dwork, k_timeout_t delay)
 		return 0;
 	}
 
-	slot->deadline = cycles() + (K_TIMEOUT_EQ(delay, K_NO_WAIT)
+	slot->deadline = clock_cycle_get() + (K_TIMEOUT_EQ(delay, K_NO_WAIT)
 					     ? 0u
 					     : (uint64_t)delay.ticks * CYCLES_PER_TICK);
 	slot->pending = true;
@@ -309,7 +246,7 @@ void nihao_work_poll(void)
 			continue;
 		}
 
-		if (cycles() < slot->deadline) {
+		if (clock_cycle_get() < slot->deadline) {
 			continue;
 		}
 

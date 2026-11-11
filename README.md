@@ -14,12 +14,16 @@ Zephyr's `gpio_stm32` + `pinctrl_stm32` + `clock_stm32` drivers.
 Received bytes are echoed back by the main loop, and once a second it logs a
 counter line. Logging is deferred (`LOG_MODE_DEFERRED`, no log thread): `LOG_INF()`
 only records the message, and the main loop drains the buffer with
-`log_process()`. Timestamps come from the DWT cycle counter, so lines look like
+`log_process()`. The time base is the upstream `cortex_m_systick` system timer
+driver: `port/src/sys_clock_glue.c` supplies the kernel-side
+`sys_clock_announce_locked()` and re-arms a 1 ms tick, and timestamps are built
+from its cycle counter. Lines look like
 `[00:00:12.500,000] <inf> nihao: alive 13 s, ...`. `IRQ_CONNECT()` registrations
 are turned into a RAM dispatch table at boot by `port/src/irq_loader.c`; the
 startup file routes unclaimed vectors there (see ADR-0004).
 
-Not yet ported: timers, power management, fault reporting.
+Not yet ported: the kernel timeout queue behind `k_timer`/`k_sleep`, power
+management, fault reporting.
 
 ## Requirements
 

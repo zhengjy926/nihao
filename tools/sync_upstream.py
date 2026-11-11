@@ -43,6 +43,8 @@ ZEPHYR_FILES = (
     "drivers/dma/dma_stm32.c",
     "drivers/dma/dma_stm32_v1.c",
     "drivers/dma/dma_stm32.h",
+    "drivers/timer/cortex_m_systick.c",
+    "drivers/timer/system_timer_generic.h",
     "lib/os/printk.c",
     "lib/libc/armstdc/src/libc-hooks.c",
     "subsys/logging/log_core.c",
@@ -70,6 +72,7 @@ MODULE_FILES = (
     "hal/stm32/stm32cube/stm32f4xx/soc/system_stm32f4xx.h",
     "hal/stm32/stm32cube/stm32f4xx/soc/system_stm32f4xx.c",
     "hal/stm32/stm32cube/stm32f4xx/drivers/src/stm32f4xx_ll_dma.c",
+    "hal/stm32/stm32cube/stm32f4xx/drivers/src/stm32f4xx_ll_utils.c",
 )
 
 

@@ -18,6 +18,8 @@ GROUPS = {
          r"..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\soc\system_stm32f4xx.c"),
         ("stm32f4xx_ll_dma.c", 1,
          r"..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\drivers\src\stm32f4xx_ll_dma.c"),
+        ("stm32f4xx_ll_utils.c", 1,
+         r"..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\drivers\src\stm32f4xx_ll_utils.c"),
     ],
     "app": [
         ("main.c", 1, r"..\src\main.c"),
@@ -33,6 +35,7 @@ GROUPS = {
         ("kernel_shim.c", 1, r"..\port\src\kernel_shim.c"),
         ("libc_shim.c", 1, r"..\port\src\libc_shim.c"),
         ("hal_shim.c", 1, r"..\port\src\hal_shim.c"),
+        ("sys_clock_glue.c", 1, r"..\port\src\sys_clock_glue.c"),
     ],
     "zephyr/kernel": [
         ("device.c", 1, r"..\third_party\zephyr\kernel\device.c"),
@@ -60,6 +63,8 @@ GROUPS = {
          r"..\third_party\zephyr\drivers\dma\dma_stm32.c"),
         ("dma_stm32_v1.c", 1,
          r"..\third_party\zephyr\drivers\dma\dma_stm32_v1.c"),
+        ("cortex_m_systick.c", 1,
+         r"..\third_party\zephyr\drivers\timer\cortex_m_systick.c"),
     ],
     "zephyr/subsys/logging": [
         ("log_core.c", 1, r"..\third_party\zephyr\subsys\logging\log_core.c"),
