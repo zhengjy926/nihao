@@ -149,7 +149,7 @@ is orphaned, usually still holding `build_cfg/` open so the next run fails in
 
 ## RTT log capture
 
-The firmware has no console: log lines leave the MCU over SEGGER RTT (ADR-0006),
+The firmware has no console: log lines leave the MCU over SEGGER RTT,
 so a serial terminal shows nothing. Both steps work without uVision:
 
 ```powershell
