@@ -356,11 +356,21 @@
       <Group>
         <GroupName>services</GroupName>
         <Files>
+        <File>
+          <FileName>ecsp.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\services\ecsp\ecsp.c</FilePath>
+        </File>
         </Files>
       </Group>
       <Group>
         <GroupName>port</GroupName>
         <Files>
+        <File>
+          <FileName>runtime.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\port\src\runtime.c</FilePath>
+        </File>
         <File>
           <FileName>rodata_bounds.s</FileName>
           <FileType>2</FileType>

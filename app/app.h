@@ -7,7 +7,7 @@
 
 /**
  * Bring the runtime up: run the init levels, install the log timestamp hook,
- * check the devicetree devices and start the asynchronous console UART.
+ * check the devicetree devices and start the asynchronous ECSP UART.
  *
  * Must be called exactly once, before the first app_task() call.
  *
@@ -16,9 +16,8 @@
 int app_init(void);
 
 /**
- * Run one step of the super-loop: poll the deferred work queue, drain the echo
- * ring and the log buffer, and flip the status LED / log the health line on
- * their own deadlines.
+ * Run one step of the super-loop: poll deferred work, process a bounded number
+ * of ECSP bytes, drain logs, and service LED and handshake deadlines.
  *
  * Non-blocking; call it in a tight loop from main().
  */

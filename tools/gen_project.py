@@ -28,8 +28,9 @@ GROUPS = {
     ],
     # Intentionally empty: the group is emitted with no files so the directory
     # shows up in uVision before its first source file exists.
-    "services": [],
+    "services": [("ecsp.c", 1, r"..\services\ecsp\ecsp.c")],
     "port": [
+        ("runtime.c", 1, r"..\port\src\runtime.c"),
         ("rodata_bounds.s", 2, r"..\port\src\rodata_bounds.s"),
         ("init_runner.c", 1, r"..\port\src\init_runner.c"),
         ("errno_shim.c", 1, r"..\port\src\errno_shim.c"),
