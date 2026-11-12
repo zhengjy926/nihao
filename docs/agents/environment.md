@@ -40,6 +40,9 @@ plaintext**, so committed blobs and `git diff` are portable.
    `read_text()` for any content read in new scripts.
 3. Do not "fix" a container by rewriting it byte-for-byte; let the owning tool
    write it.
+4. `.s` files must stay **plaintext**: `armasm` is not allow-listed, so a container
+   `.s` assembles as binary garbage (`A1167E: Invalid line start`). Write them
+   with an untrusted writer (`Copy-Item`) rather than Python.
 
 ## Arm Compiler 6.23 and devicetree preprocessing
 
@@ -85,9 +88,11 @@ uVision's exit code. Exit code 1 means warnings, 2 means errors.
 
 ## Target board
 
-ALIENTEK Explorer, STM32F429IGT6, 25 MHz HSE, 180 MHz SYSCLK. **BOOT0 must be
-0**: with BOOT0 high the chip runs the ST ROM bootloader and the application
-never starts, even though the image is present at `0x08000000`.
+PSG pulse generator board, STM32G474QET6 (LQFP128), 8 MHz HSE, 170 MHz SYSCLK,
+512 KB flash, 96 KB of SRAM used (SRAM1+SRAM2; CCM is untouched). `BOOT0` is tied
+low, so the image at `0x08000000` runs after every reset. Pin assignments live in
+`docs/MCU引脚功能映射表.md`; the board devicetree restates only the pins the
+firmware uses.
 
 ## Compiler flags
 

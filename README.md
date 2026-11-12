@@ -3,14 +3,15 @@
 Zephyr's device model, devicetree configuration and STM32 drivers running on a
 bare-metal runtime, built with Keil MDK and Arm Compiler 6.
 
-Target: ALIENTEK Explorer (STM32F429IGT6, Cortex-M4F, 25 MHz HSE, 180 MHz SYSCLK).
+Target: PSG pulse generator board (STM32G474QET6, Cortex-M4F, 8 MHz HSE, 170 MHz SYSCLK).
 
 ## Status
 
-`led0` (PB1, active low) blinks at 1 Hz from a devicetree-declared GPIO through
+`led0` (PB9, active low) blinks at 1 Hz from a devicetree-declared GPIO through
 Zephyr's `gpio_stm32` + `pinctrl_stm32` + `clock_stm32` drivers.
 
-`uart_stm32` runs through the async API on DMA2 (TX stream 7, RX stream 2).
+`uart_stm32` runs through the async API on DMA1 through DMAMUX (TX request 25,
+RX request 24) on `USART1` (PC4/PC5).
 Received bytes are echoed back by the main loop, and once a second it logs a
 counter line. Logging is deferred (`LOG_MODE_DEFERRED`, no log thread): `LOG_INF()`
 only records the message, and the main loop drains the buffer with
@@ -61,23 +62,20 @@ reader matrix and the other environment quirks.
 
 Flash `mdk/Objects/nihao.hex` over SWD (J-Link, ST-Link, or uVision Download).
 
-**BOOT0 must be 0** (boot from flash). On the Explorer board, put the BOOT0
-jumper/switch in the 0 position before resetting; with BOOT0 high the chip runs
-the ST ROM bootloader and the application never starts, even though the image is
-present at 0x08000000.
+`BOOT0` is tied low on this board, so the image at `0x08000000` runs after every
+reset; there is no boot-mode jumper to check.
 
-Then open the console UART (the CH340 port, `USART1` on PA9/PA10) at **115200
+Then open the console UART (`USART1` on PC4/PC5) at **115200
 8N1**. Expected:
 
 ```
 [00:00:00.0xx,xxx] <inf> nihao: nihao 4.5.0 built <date> <time>
-[00:00:00.0xx,xxx] <inf> nihao: sysclk 180000000 Hz, console ready at 115200 baud
+[00:00:00.0xx,xxx] <inf> nihao: sysclk 170000000 Hz, console ready at 115200 baud
 [00:00:00.0xx,xxx] <inf> nihao: async uart ready: dma tx/rx, rx ring 256 B
 [00:00:01.0xx,xxx] <inf> nihao: alive 1 s, echo 0 B, drop 0, irq 0, sem timeout 0, miss 0
 ```
 
-- LED0 (DS0, PB1) blinks at 1 Hz; `led1` (PB0) is described in the devicetree but
-  not driven yet.
+- LED0 (PB9) blinks at 1 Hz.
 - Typing into the terminal is echoed back, and `echo` in the next alive line
   grows by the number of bytes sent.
 - `drop 0`, `sem timeout 0` and `miss 0` are the health indicators: dropped echo
@@ -90,7 +88,7 @@ board that "goes silent" right after flashing is usually not running: press rese
 
 ## Regenerate the configuration snapshot
 
-Only needed after editing `boards/alientek/f429igt6/f429igt6.dts` or the board
+Only needed after editing `boards/psg/g474qet6/g474qet6.dts` or the board
 defconfig:
 
 ```powershell
@@ -102,7 +100,7 @@ python tools\gen_config.py
 
 | Path | Contents |
 | --- | --- |
-| `boards/alientek/f429igt6/` | Devicetree and Kconfig board definition, plus the CMSIS startup file |
+| `boards/psg/g474qet6/` | Devicetree and Kconfig board definition, plus the CMSIS startup file |
 | `config_gen/4.5.0/` | Committed snapshot of `autoconf.h`, `devicetree_generated.h`, `version.h`, syscall and kobject headers |
 | `third_party/` | Unmodified upstream sources (Zephyr 4.5.0, CMSIS, STM32 HAL headers) |
 | `port/` | The shim layer: everything this port has to provide itself |

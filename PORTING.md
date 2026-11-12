@@ -26,7 +26,7 @@
 | `lib/os/printk.c` | `snprintk()` 以及控制台使用的 printk 字符输出钩子 |
 | `lib/libc/armstdc/` | Zephyr 的 Arm Compiler C 库胶水（`errno.c`） |
 | `soc/st/stm32/common/stm32_bitops.h`、`stm32_hsem.h`、`stm32_gpio_shared.h`、`pinctrl_soc.h` | SoC 辅助头文件 |
-| `modules/hal/cmsis_6`、`modules/hal/stm32/stm32cube/stm32f4xx`、`common_ll` | CMSIS 内核头文件与 STM32F4 设备/LL 头文件，以及 `drivers/src/stm32f4xx_ll_utils.c`（`LL_SetFlashLatency()`） |
+| `modules/hal/cmsis_6`、`modules/hal/stm32/stm32cube/stm32g4xx`、`common_ll` | CMSIS 内核头文件与 STM32G4 设备/LL 头文件，以及 `drivers/src/stm32g4xx_ll_utils.c`（`LL_SetFlashLatency()`） |
 | `arch/common/include` | `gen_offset.h` 等 |
 
 除此之外（内核、调度器、日志、UART 等）均有意不纳入。
@@ -40,7 +40,7 @@
 - `device_list_bounds.c` —— 导出 `_device_list_start`/`_device_list_end`，`kernel/device.c` 期望这两个符号由链接器提供。
 - `arch_irq_shim.c` —— 在 CMSIS NVIC 之上实现 `arm_irq_enable/disable/priority_set`。
 - `errno_shim.c` —— 为 Arm Compiler C 库提供 `z_impl_z_errno()` 与 `__aeabi_errno_addr()`（上游的钩子需要内核线程指针）。
-- `hal_shim.c` —— 只剩 `HAL_RCC_GetSysClockFreq()`（复位态 HSI = 16 MHz）；`LL_SetFlashLatency()` 已改用上游 `stm32f4xx_ll_utils.c`。完整的 HAL RCC 驱动仍然进不来，原因见[已知偏差](#已知偏差与陷阱)里的 armlink 条目。
+- `hal_shim.c` —— 只剩 `HAL_RCC_GetSysClockFreq()`（复位态 HSI = 16 MHz）；`LL_SetFlashLatency()` 已改用上游 `stm32g4xx_ll_utils.c`。完整的 HAL RCC 驱动仍然进不来，原因见[已知偏差](#已知偏差与陷阱)里的 armlink 条目。
 - `sys_clock_glue.c` —— 上游系统时基驱动所缺的内核那一半：`sys_clock_announce_locked()` 只推进 tick 计数、再按固定的 1 ms 重装 SysTick（没有超时队列，也不在中断里跑工作处理函数）；`k_uptime_ticks` 由整 tick 加亚 tick 周期组成。启动文件的 SysTick 向量直接指向驱动里的 `sys_clock_isr`。
 - `log_section_bounds.c` —— 提供日志子系统遍历的可迭代链表所需的 `_log_*_list_start`/`_end`；`scatter.sct` 用标记把每个链表括起来。
 - `rodata_bounds.s` —— `__rodata_region_start`/`_end`，即 cbprintf 在就地引用格式串之前要检查的 Flash 窗口。
@@ -83,10 +83,10 @@ static struct nihao_work works[NIHAO_WORK_SLOTS]; /* 4 */
 
 ```
 CYCLES_PER_TICK = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PER_SEC
-                = 180000000 / 10000 = 18000 cycles = 100 us
+                = 170000000 / 10000 = 17000 cycles = 100 us
 ```
 
-这里所有 deadline 的粒度都是 100 µs。驱动在一段短 DMA 突发之后重新装载的是 `K_TICKS(1)` = 100 µs；`main.c` 请求的是 `K_USEC(1000)` = 10 个 tick。
+这里所有 deadline 的粒度都是 100 µs。驱动在一段短 DMA 突发之后重新装载的是 `K_TICKS(1)` = 100 µs；`app/app.c` 请求的是 `K_USEC(1000)` = 10 个 tick。
 
 `sys_clock_cycle_get_64()` 由驱动与 timer core 合成：SysTick 只有 24 位递减计数，驱动用 `last_load` 与 `SysTick->VAL` 在软件里拼出 32 位周期计数，再由 timer core 按 announce 基线扩展成 64 位。因为计数是合成的（`TIMER_CORE_COUNTER_NONATOMIC`），getter 内部会取一次时钟锁——UP 下就是 `arch_irq_lock()`，保存/恢复 PRIMASK，所以主循环、中断与 `irq_lock()` 内部都能调用，自旋里的开销只是几条指令。
 
@@ -112,7 +112,7 @@ CYCLES_PER_TICK = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PE
 
 ## 配置快照
 
-`config_gen/4.5.0/` 保存的是针对 `boards/alientek/f429igt6` 跑一次 Zephyr configure 所产生的头文件。Keil 通过 `-imacros .../autoconf.h` 与 `-I config_gen/4.5.0` 消费它们。
+`config_gen/4.5.0/` 保存的是针对 `boards/psg/g474qet6` 跑一次 Zephyr configure 所产生的头文件。Keil 通过 `-imacros .../autoconf.h` 与 `-I config_gen/4.5.0` 消费它们。
 
 用 `python tools/gen_config.py` 重新生成。脚本会：
 
@@ -126,7 +126,7 @@ CYCLES_PER_TICK = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PE
 
 - **初始化顺序**先按级别执行域、级别内再按段名排序——与 Zephyr 自己的链接器所用的排序规则相同。
 - **必须用 `-O1` 或更高**：在 `-O0` 下 armclang 会为未使用的 `static inline` 内核辅助函数生成代码，从而拖入未解析的内核符号。
-- **栈为 8 KiB**（`startup_stm32f429xx.s` 中的 `Stack_Size`）。`scatter.sct` 给栈和堆各自分配固定的执行域（`ER_STACK`、`ER_HEAP`），这样静态数据长到它们身上时会在链接期失败，而不是在运行时压坏栈。`armasm` 无法引用链接器的 `Image$$...` 符号，所以尺寸仍写在启动文件里，scatter 执行域只负责强制这些尺寸。
+- **栈为 8 KiB**（`startup_stm32g474xx.s` 中的 `Stack_Size`）。`scatter.sct` 给栈和堆各自分配固定的执行域（`ER_STACK`、`ER_HEAP`），这样静态数据长到它们身上时会在链接期失败，而不是在运行时压坏栈。`armasm` 无法引用链接器的 `Image$$...` 符号，所以尺寸仍写在启动文件里，scatter 执行域只负责强制这些尺寸。
 - **armlink 会忽略固定基地址执行域内的段选择器**：在 `ER_IROM1` 与 `RW_IRAM1` 中只有 `.ANY` 生效。因此每个可迭代链表都有自己的 `+0` 执行域，而括起链表的标记段用 `+First`/`+Last`，因为零长度段否则会被放到所在执行域的末尾。`.intList` 被编译器标为 RW，所以那里 `+Last` 不起作用：它的结束标记放在紧随其后的独立执行域（`ER_INTLIST_END`）里。
 - **端点加密产品会弄乱 `python.exe` 写出的文件**：它们以加密形式存储，只有白名单内的读取者（`armclang`、`python`）能看到明文。`armasm` 不在白名单里，所以任何 `.s` 文件都必须由明文写入者（PowerShell）写出，否则汇编器读到的是 `%TSD-Header-###%` 并报 `A1271E: Line too long`。
 - **零长度标记数组必须从另一个编译单元索引。** 在定义它的单元里索引 `const char x[0]` 属于未定义行为，所以 `-O1` 会把整个循环删掉（修复前 `nihao_irq_table_load` 被编译成一条存储指令）。在一处定义标记，在遍历它们的地方以 `extern const struct ... []` 声明。
@@ -135,12 +135,12 @@ CYCLES_PER_TICK = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PE
 - **一个 UART 设备只有一个异步回调。** `LOG_BACKEND_UART_ASYNC` 的 `char_out` 会安装自己的回调，并等待只有该回调才会给出的信号量，所以应用若同时调用 `uart_callback_set()`（用于 RX），就会占掉后端的槽位，后端则永远等下去。日志后端与应用只能有一方拥有回调——本移植把它留给应用，让日志后端改为轮询（`LOG_BACKEND_UART`）。
 - **`clk_hse` 必须在板级设备树中启用。** SoC 的 dtsi 提供它时 `status = "disabled"`。若 PLL 选择 HSE 而节点仍处于禁用状态，`set_up_fixed_clock_sources()` 就不会启动晶振，`stm32_clock_control_init()` 会在 `PLLRDY` 上死等。症状：镜像在 `main` 之前挂住，`RCC->CR = 0x01007D83`（PLLON 置位、PLLRDY 清零、HSEON 清零）。
 - **`HAL_RCC_GetSysClockFreq()` 返回的是复位态 HSI 频率。** 它只被用一次，用于在 PLL 编程之前计算 Flash 等待周期，这是 `hal_shim.c` 现在唯一的内容。
-- **armlink 对被删段里的未定义符号仍然报错。** 即使 `--remove` 已经把 `HAL_RCC_OscConfig`、`HAL_RCC_ClockConfig`、`HAL_RCC_MCOConfig` 整段删掉，编进 `stm32f4xx_hal_rcc.c` 依然要求 `HAL_GetTick()`、`HAL_InitTick()`、`uwTickPrio`、`HAL_GPIO_Init()` 有定义——所以"只取一个函数"不是文件级选择能解决的：要么保留 `HAL_RCC_GetSysClockFreq()` 的垫片，要么把 HAL core 和它的 SysTick 时基一起链进来（那正是第二条时钟路径）。`stm32f4xx_ll_utils.c` 没有这个问题：它自足，除 `LL_SetFlashLatency()` 外的函数被正常 GC（`LL_mDelay`、`LL_Init1msTick`、`LL_PLL_ConfigSystemClock_*` 都在删除列表里）。上游版 `LL_SetFlashLatency` 带电源档位分支与有界轮询，比原来手写的 114 B 表多 212 B。
+- **armlink 对被删段里的未定义符号仍然报错。** 即使 `--remove` 已经把 `HAL_RCC_OscConfig`、`HAL_RCC_ClockConfig`、`HAL_RCC_MCOConfig` 整段删掉，把上游 HAL RCC 文件整个编进来依然要求 `HAL_GetTick()`、`HAL_InitTick()`、`uwTickPrio`、`HAL_GPIO_Init()` 有定义——所以"只取一个函数"不是文件级选择能解决的：要么保留 `HAL_RCC_GetSysClockFreq()` 的垫片，要么把 HAL core 和它的 SysTick 时基一起链进来（那正是第二条时钟路径）。`stm32g4xx_ll_utils.c` 没有这个问题：它自足，除 `LL_SetFlashLatency()` 外的函数被正常 GC（`LL_mDelay`、`LL_Init1msTick`、`LL_PLL_ConfigSystemClock_*` 都在删除列表里）。上游版 `LL_SetFlashLatency` 带电源档位分支与有界轮询，比原来手写的 114 B 表多 212 B。
 - **时基是固定的 1 ms 周期，不是上游的 tickless。** 4.5 的驱动与 timer core 按 tickless 设计，靠内核在超时变化时调用 `sys_clock_set_timeout()`；这里没有超时队列，所以 `sys_clock_announce_locked()` 在每次 announce 之后都重装 `NIHAO_TICKS_PER_MS`（10 个 tick = 1 ms）。`k_uptime_ticks()` 仍是“整 tick + `sys_clock_elapsed()`”，亚 tick 分辨率没有损失，只是中断固定 1 kHz；要按 deadline 唤醒，就得把工作表的最近截止时间喂给 `sys_clock_set_timeout()`。
 - **SysTick 的优先级是 1，会抢占 USART/DMA 中断。** `CONFIG_CORTEX_M_SYSTICK_INTERRUPT_PRIORITY=0`，驱动再加 `_IRQ_PRIO_OFFSET`（本板为 1），0 留给处理器 fault。ISR 约 300 B，只推进计数并重装 LOAD，不调用任何驱动回调。
 - **`z_arm_int_exit()` 是空实现。** 直接装在向量表里的 ISR 退出时调用它（上游是 `arch/arm/core/cortex_m/exc_exit.c` 的别名，职责只是按需 pend PendSV）。没有调度器，所以 `arch_irq_shim.c` 给了一个空函数；异常返回仍由 `sys_clock_isr` 自己的 epilogue 完成。
 - **DWT 不再参与计时。** 原来的 DWT 周期计数已删除，`DWT->CYCCNT` 空出来留给以后的高精度剖析；要用上游的 `z_arm_dwt_*` 助手还需把 `arch/arm/include/cortex_m/dwt.h` 收进 `third_party/`。
-- **没有 `SystemInit` 时钟配置**：`system_stm32f4xx.c` 提供了启动钩子，但 PLL/总线配置来自 `clock_stm32` 与设备树，因此 `f429igt6.dts` 是时钟的唯一事实来源。
+- **没有 `SystemInit` 时钟配置**：`system_stm32g4xx.c` 提供了启动钩子，但 PLL/总线配置来自 `clock_stm32` 与设备树，因此 `g474qet6.dts` 是时钟的唯一事实来源。
 
 ## 后续工作
 
