@@ -24,6 +24,7 @@ GROUPS = {
     ],
     "app": [
         ("main.c", 1, r"..\app\main.c"),
+        ("app.c", 1, r"..\app\app.c"),
     ],
     # Intentionally empty: the group is emitted with no files so the directory
     # shows up in uVision before its first source file exists.

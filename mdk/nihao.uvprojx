@@ -346,6 +346,11 @@
           <FileType>1</FileType>
           <FilePath>..\app\main.c</FilePath>
         </File>
+        <File>
+          <FileName>app.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\app\app.c</FilePath>
+        </File>
         </Files>
       </Group>
       <Group>

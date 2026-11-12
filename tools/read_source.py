@@ -5,7 +5,7 @@
 Examples:
     python tools/read_source.py third_party/zephyr/kernel/device.c --head 40
     python tools/read_source.py third_party/zephyr/include/zephyr/kernel.h --grep "z_timeout"
-    python tools/read_source.py src/main.c -n
+    python tools/read_source.py app/main.c -n
 """
 
 from __future__ import annotations
