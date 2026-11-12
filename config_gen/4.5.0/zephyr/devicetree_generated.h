@@ -26503,10 +26503,8 @@
 #define DT_CHOSEN_zephyr_entropy_EXISTS          1
 #define DT_CHOSEN_zephyr_flash_controller        DT_N_S_soc_S_flash_controller_40022000
 #define DT_CHOSEN_zephyr_flash_controller_EXISTS 1
-#define DT_CHOSEN_zephyr_console                 DT_N_S_soc_S_serial_40013800
-#define DT_CHOSEN_zephyr_console_EXISTS          1
-#define DT_CHOSEN_zephyr_shell_uart              DT_N_S_soc_S_serial_40013800
-#define DT_CHOSEN_zephyr_shell_uart_EXISTS       1
+#define DT_CHOSEN_zephyr_protocol_uart           DT_N_S_soc_S_serial_40013800
+#define DT_CHOSEN_zephyr_protocol_uart_EXISTS    1
 #define DT_CHOSEN_zephyr_flash                   DT_N_S_soc_S_flash_controller_40022000_S_flash_8000000
 #define DT_CHOSEN_zephyr_flash_EXISTS            1
 #define DT_CHOSEN_zephyr_sram                    DT_N_S_memory_20000000

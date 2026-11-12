@@ -38,7 +38,6 @@ ZEPHYR_FILES = (
     "drivers/interrupt_controller/intc_exti_stm32_priv.h",
     "drivers/serial/uart_stm32.c",
     "drivers/serial/uart_stm32.h",
-    "drivers/console/uart_console.c",
     "drivers/reset/reset_stm32.c",
     "drivers/pinctrl/common.c",
     "drivers/dma/dma_stm32.c",
@@ -55,7 +54,8 @@ ZEPHYR_FILES = (
     "subsys/logging/log_cache.c",
     "subsys/logging/log_cache.h",
     "subsys/logging/log_mgmt.c",
-    "subsys/logging/backends/log_backend_uart.c",
+    "subsys/logging/backends/log_backend_rtt.c",
+    "modules/segger/SEGGER_RTT_zephyr.c",
     "lib/os/cbprintf.c",
     "lib/os/cbprintf_complete.c",
     "lib/os/cbprintf_packaged.c",
@@ -69,6 +69,10 @@ MODULE_DIRS = (
 )
 
 MODULE_FILES = (
+    "debug/segger/SEGGER/SEGGER_RTT.c",
+    "debug/segger/SEGGER/SEGGER_RTT.h",
+    "debug/segger/Config/SEGGER_RTT_Conf.h",
+    "debug/segger/Config/Global.h",
     "hal/stm32/stm32cube/stm32g4xx/soc/stm32g4xx.h",
     "hal/stm32/stm32cube/stm32g4xx/soc/stm32g474xx.h",
     "hal/stm32/stm32cube/stm32g4xx/soc/system_stm32g4xx.h",

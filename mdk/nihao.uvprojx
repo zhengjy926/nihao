@@ -267,7 +267,7 @@
               <MiscControls>-imacros ../config_gen/4.5.0/zephyr/autoconf.h</MiscControls>
               <Define>__ZEPHYR__=1,CORE_CM4,STM32G474xx,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,HSE_VALUE=8000000</Define>
               <Undefine></Undefine>
-              <IncludePath>..;..\config_gen\4.5.0;..\third_party\zephyr\include;..\third_party\zephyr\arch\common\include;..\third_party\zephyr\soc\st\stm32\stm32g4x;..\third_party\zephyr\soc\st\stm32\common;..\third_party\zephyr\modules\cmsis_6;..\third_party\zephyr\lib\libc\armstdc\include;..\third_party\zephyr\lib\libc\common\include;..\third_party\modules\hal\cmsis_6\CMSIS\Core\Include;..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\soc;..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\drivers\include;..\third_party\modules\hal\stm32\stm32cube\common_ll\include</IncludePath>
+              <IncludePath>..;..\config_gen\4.5.0;..\third_party\zephyr\include;..\third_party\zephyr\arch\common\include;..\third_party\zephyr\soc\st\stm32\stm32g4x;..\third_party\zephyr\soc\st\stm32\common;..\third_party\zephyr\modules\cmsis_6;..\third_party\zephyr\lib\libc\armstdc\include;..\third_party\zephyr\lib\libc\common\include;..\third_party\modules\hal\cmsis_6\CMSIS\Core\Include;..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\soc;..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\drivers\include;..\third_party\modules\hal\stm32\stm32cube\common_ll\include;..\third_party\modules\debug\segger\SEGGER;..\third_party\modules\debug\segger\Config</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -472,11 +472,6 @@
           <FilePath>..\third_party\zephyr\drivers\serial\uart_stm32.c</FilePath>
         </File>
         <File>
-          <FileName>uart_console.c</FileName>
-          <FileType>1</FileType>
-          <FilePath>..\third_party\zephyr\drivers\console\uart_console.c</FilePath>
-        </File>
-        <File>
           <FileName>reset_stm32.c</FileName>
           <FileType>1</FileType>
           <FilePath>..\third_party\zephyr\drivers\reset\reset_stm32.c</FilePath>
@@ -537,9 +532,24 @@
           <FilePath>..\third_party\zephyr\subsys\logging\log_mgmt.c</FilePath>
         </File>
         <File>
-          <FileName>log_backend_uart.c</FileName>
+          <FileName>log_backend_rtt.c</FileName>
           <FileType>1</FileType>
-          <FilePath>..\third_party\zephyr\subsys\logging\backends\log_backend_uart.c</FilePath>
+          <FilePath>..\third_party\zephyr\subsys\logging\backends\log_backend_rtt.c</FilePath>
+        </File>
+        </Files>
+      </Group>
+      <Group>
+        <GroupName>segger</GroupName>
+        <Files>
+        <File>
+          <FileName>SEGGER_RTT.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\third_party\modules\debug\segger\SEGGER\SEGGER_RTT.c</FilePath>
+        </File>
+        <File>
+          <FileName>SEGGER_RTT_zephyr.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\third_party\zephyr\modules\segger\SEGGER_RTT_zephyr.c</FilePath>
         </File>
         </Files>
       </Group>

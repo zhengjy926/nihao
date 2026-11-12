@@ -36,13 +36,17 @@ Individual files:
 - `zephyr/drivers/clock_control/clock_stm32g4.c`, `clock_stm32_ll_common.c`, `clock_stm32_ll_common.h`
 - `zephyr/drivers/interrupt_controller/intc_gpio_stm32.c`, `intc_exti_stm32.c`, `intc_exti_stm32_priv.h`
 - `zephyr/drivers/serial/uart_stm32.c`, `uart_stm32.h`
-- `zephyr/drivers/console/uart_console.c`
 - `zephyr/drivers/reset/reset_stm32.c`
 - `zephyr/drivers/pinctrl/common.c`
 - `zephyr/drivers/dma/dma_stm32.c`, `dma_stm32_v2.c`, `dmamux_stm32.c`, `dma_stm32.h`
 - `zephyr/drivers/timer/cortex_m_systick.c`, `system_timer_generic.h`
 - `zephyr/subsys/logging/log_core.c`, `log_msg.c`, `log_output.c`, `log_cache.c`, `log_cache.h`, `log_mgmt.c`
-- `zephyr/subsys/logging/backends/log_backend_uart.c`
+- `zephyr/subsys/logging/backends/log_backend_rtt.c`
+- `zephyr/modules/segger/SEGGER_RTT_zephyr.c`,
+  `modules/debug/segger/SEGGER/SEGGER_RTT.c`, `SEGGER_RTT.h`,
+  `modules/debug/segger/Config/SEGGER_RTT_Conf.h`, `Global.h` (SEGGER RTT 3.58,
+  BSD-style licence; the module's `SEGGER_RTT_printf.c`, Syscalls files and
+  `SEGGER_RTT_ASM_ARMv7M.S` are not built upstream either, so they stay out)
 - `zephyr/lib/os/cbprintf.c`, `cbprintf_complete.c`, `cbprintf_packaged.c`, `printk.c`
 - `zephyr/lib/libc/armstdc/src/libc-hooks.c`
 - `modules/hal/stm32/stm32cube/stm32g4xx/soc/stm32g4xx.h`, `stm32g474xx.h`, `system_stm32g4xx.h`, `system_stm32g4xx.c`

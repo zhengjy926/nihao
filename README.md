@@ -13,9 +13,15 @@ Zephyr's `gpio_stm32` + `pinctrl_stm32` + `clock_stm32` drivers.
 `uart_stm32` runs through the async API on DMA1 through DMAMUX (TX request 25,
 RX request 24) on `USART1` (PC4/PC5).
 Received bytes are echoed back by the main loop, and once a second it logs a
-counter line. Logging is deferred (`LOG_MODE_DEFERRED`, no log thread): `LOG_INF()`
-only records the message, and the main loop drains the buffer with
-`log_process()`. The time base is the upstream `cortex_m_systick` system timer
+counter line. `USART1` is the application's own port: there is no console
+(`CONFIG_CONSOLE=n` and no `zephyr,console` chosen node), and the devicetree
+names the port through `zephyr,protocol-uart` so the firmware never spells out
+`usart1`.
+Logging is deferred (`LOG_MODE_DEFERRED`, no log thread): `LOG_INF()` only
+records the message, and the main loop drains the buffer with
+`log_process()`. The backend is upstream's SEGGER RTT one, so the lines leave
+the MCU over the debug probe's RTT channel instead of a serial port.
+The time base is the upstream `cortex_m_systick` system timer
 driver: `port/src/sys_clock_glue.c` supplies the kernel-side
 `sys_clock_announce_locked()` and re-arms a 1 ms tick, and timestamps are built
 from its cycle counter. Lines look like
@@ -66,19 +72,24 @@ Flash `mdk/Objects/nihao.hex` over SWD (J-Link, ST-Link, or uVision Download).
 `BOOT0` is tied low on this board, so the image at `0x08000000` runs after every
 reset; there is no boot-mode jumper to check.
 
-Then open the console UART (`USART1` on PC4/PC5) at **115200
-8N1**. Expected:
+Then attach a debugger and open the RTT viewer — J-Link RTT Viewer, 0 terminal,
+1024 B up-buffer — and reset the board (`JLinkRTTLogger` on the command line
+works too; the recipe is in
+[docs/agents/environment.md](./docs/agents/environment.md)). Expected:
 
 ```
 [00:00:00.0xx,xxx] <inf> nihao: nihao 4.5.0 built <date> <time>
-[00:00:00.0xx,xxx] <inf> nihao: sysclk 170000000 Hz, console ready at 115200 baud
+[00:00:00.0xx,xxx] <inf> nihao: sysclk 170000000 Hz, uart ready at 115200 baud
 [00:00:00.0xx,xxx] <inf> nihao: async uart ready: dma tx/rx, rx ring 256 B
 [00:00:01.0xx,xxx] <inf> nihao: alive 1 s, echo 0 B, drop 0, irq 0, sem timeout 0, miss 0
 ```
 
+The same `USART1` port is still a plain 115200 8N1 serial link for data (no
+console on it any more):
+
 - LED0 (PB9) blinks at 1 Hz.
-- Typing into the terminal is echoed back, and `echo` in the next alive line
-  grows by the number of bytes sent.
+- Typing into a serial terminal on PC4/PC5 is echoed back, and `echo` in the
+  next alive line grows by the number of bytes sent.
 - `drop 0`, `sem timeout 0` and `miss 0` are the health indicators: dropped echo
   bytes, semaphore spins that hit their bound, and unhandled interrupt vectors.
 - `irq` counts every dispatched interrupt and should climb with traffic.

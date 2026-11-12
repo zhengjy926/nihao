@@ -51,6 +51,10 @@ plaintext**, so committed blobs and `git diff` are portable.
 4. `.s` files must stay **plaintext**: `armasm` is not allow-listed, so a container
    `.s` assembles as binary garbage (`A1167E: Invalid line start`). Write them
    with an untrusted writer (`Copy-Item`) rather than Python.
+5. Search sources with `python tools\find_in_sources.py <regex> [paths...]`. It
+   decodes every file through the workstation reader and skips `third_party/`,
+   `config_gen/` and `build_cfg/` by default, so a "no match" is a fact rather
+   than a ciphertext read.
 
 ## Arm Compiler 6.23 and devicetree preprocessing
 
@@ -72,6 +76,12 @@ Zephyr's CMake needs the venv next to the Zephyr tree
 (`<zephyr>/../.venv/Scripts/python.exe`). The system Python lacks Zephyr's
 dependencies and configuration fails. `gen_config.py` picks the venv
 automatically; override with `--python`.
+
+Python's own stdout here is `gbk` (code page 936) even when the output is piped,
+while the harness reads command output as UTF-8: a tool that prints Chinese
+source lines must `sys.stdout.reconfigure(encoding="utf-8")` when stdout is not
+a tty, or every line arrives as mojibake. `tools/find_in_sources.py` shows the
+pattern; `readsrc.py` predates it and still prints Chinese garbled when piped.
 
 ## Host tool paths
 
@@ -104,6 +114,30 @@ Piping these scripts into `Select-Object -First N` closes the pipe once it has
 enough lines: Python is killed mid-run and the child it spawned (CMake, uVision)
 is orphaned, usually still holding `build_cfg/` open so the next run fails in
 `rmtree` with `PermissionError`. Redirect to a file and read its tail instead.
+
+## RTT log capture
+
+The firmware has no console: log lines leave the MCU over SEGGER RTT (ADR-0006),
+so a serial terminal shows nothing. Both steps work without uVision:
+
+```powershell
+# flash mdk\Objects\nihao.hex and let it run
+& "D:\Program Files (x86)\SEGGER\JLink\JLink.exe" -NoGui 1 -ExitOnError 1 `
+  -CommandFile flash.jlink
+#  flash.jlink:  si SWD / speed 4000 / device STM32G474QE / connect
+#                h / loadfile <repo>\mdk\Objects\nihao.hex / r / g / qc
+
+# read channel 0 into a file (runs until Ctrl-C)
+& "D:\Program Files (x86)\SEGGER\JLink\JLinkRTTLogger.exe" -Device STM32G474QE `
+  -If SWD -Speed 4000 -RTTChannel 0 rtt.log
+```
+
+- A J-Link reset halts the core (`VC_CORERESET`), so the `g` in the script — or a
+  press of the board's reset button — is what makes the image run.
+- Channel 0, 1024 B up-buffer (`CONFIG_SEGGER_RTT_BUFFER_SIZE_UP`). The probe
+  finds the control block by scanning RAM, so no address is needed.
+- With no reader attached the backend drops lines instead of blocking, so an
+  empty log on a running target means nothing is reading, not a firmware fault.
 
 ## Target board
 

@@ -59,8 +59,6 @@ GROUPS = {
          r"..\third_party\zephyr\drivers\interrupt_controller\intc_exti_stm32.c"),
         ("uart_stm32.c", 1,
          r"..\third_party\zephyr\drivers\serial\uart_stm32.c"),
-        ("uart_console.c", 1,
-         r"..\third_party\zephyr\drivers\console\uart_console.c"),
         ("reset_stm32.c", 1,
          r"..\third_party\zephyr\drivers\reset\reset_stm32.c"),
         ("pinctrl_common.c", 1,
@@ -80,8 +78,17 @@ GROUPS = {
         ("log_output.c", 1, r"..\third_party\zephyr\subsys\logging\log_output.c"),
         ("log_cache.c", 1, r"..\third_party\zephyr\subsys\logging\log_cache.c"),
         ("log_mgmt.c", 1, r"..\third_party\zephyr\subsys\logging\log_mgmt.c"),
-        ("log_backend_uart.c", 1,
-         r"..\third_party\zephyr\subsys\logging\backends\log_backend_uart.c"),
+        ("log_backend_rtt.c", 1,
+         r"..\third_party\zephyr\subsys\logging\backends\log_backend_rtt.c"),
+    ],
+    "segger": [
+        # SEGGER RTT is the log transport. Upstream builds exactly these two
+        # files for the module; the printf/syscall helpers and the assembly
+        # memcpy are not part of that set.
+        ("SEGGER_RTT.c", 1,
+         r"..\third_party\modules\debug\segger\SEGGER\SEGGER_RTT.c"),
+        ("SEGGER_RTT_zephyr.c", 1,
+         r"..\third_party\zephyr\modules\segger\SEGGER_RTT_zephyr.c"),
     ],
     "zephyr/lib/os": [
         ("cbprintf.c", 1, r"..\third_party\zephyr\lib\os\cbprintf.c"),
@@ -115,6 +122,8 @@ INCLUDES = [
     r"..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\soc",
     r"..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\drivers\include",
     r"..\third_party\modules\hal\stm32\stm32cube\common_ll\include",
+    r"..\third_party\modules\debug\segger\SEGGER",
+    r"..\third_party\modules\debug\segger\Config",
 ]
 
 DEFINES = "__ZEPHYR__=1,CORE_CM4,STM32G474xx,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,HSE_VALUE=8000000"

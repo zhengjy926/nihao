@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Regenerate the devicetree/Kconfig header snapshot for the f429igt6 board.
+"""Regenerate the devicetree/Kconfig header snapshot for the g474qet6 board.
 
 Requires a local Zephyr 4.5.0 tree plus CMake, Ninja and the Zephyr SDK.
 """
@@ -94,7 +94,7 @@ def main() -> int:
                              "venv next to the Zephyr tree)")
     parser.add_argument("--cmake", default=None,
                         help="cmake executable (default: auto-detect)")
-    parser.add_argument("--board", default="f429igt6")
+    parser.add_argument("--board", default="g474qet6")
     args = parser.parse_args()
 
     repo = args.repo.resolve()

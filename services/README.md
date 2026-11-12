@@ -1,30 +1,38 @@
 # services
 
-与具体板卡无关的功能域。本目录暂时没有代码，这份文件定的是"什么该放进来"。
+与具体板卡无关的功能域。设计见 `docs/固件架构与接口设计.md`。
 
 ## 判据
 
-一个子目录一个服务，服务是可以被 `app/` 装配、推进和查询的东西，例如脉冲引擎、
-ECSP 协议栈、电流采集与结算、参数与标定。判断标准是：**换一块板子，它是否还成立**。
-不成立的东西属于板级（`boards/`）或垫片层（`port/`）。
+一个子目录一个服务，服务是可以被 `app/` 装配、推进和查询的东西。判断标准是：**换一块板子，它是否还成立**。
+不成立的东西属于板级（`boards/`）、应用层（`app/`，如板级命令集）或驱动层（`drivers/`）。
 
 ## 依赖方向
 
 ```
-app  →  services  →  port  →  third_party
+app  →  services  →  drivers  →  port  →  third_party
 ```
 
-- `services/` 不得 include `app/` 的任何头文件，也不得 include `boards/` 下的具体板级头文件。
-- `services/` 与硬件打交道只经过上游 Zephyr API（`<zephyr/drivers/...>`）和 `port/` 提供的垫片；
-  不直接读写寄存器。
+- `services/` 不得 include `app/`、`boards/` 或 `drivers/` 的具体实现头，只认驱动暴露的 `ops` 函数表。
+- `services/` 与硬件打交道只经过两层：上游 Zephyr API（`<zephyr/drivers/...>`，限比较器与 Flash）和
+  `drivers/` 的窄接口（HRTIM、ADC、DAC 阈值、杆、指示、R 波与端口启停）。
 - 一个服务对外只暴露一个头文件 `<服务名>.h`，其余符号 `static`；头文件按仓库根引用，
-  写 `#include "services/<服务名>.h"`。
+  写 `#include "services/<服务名>/<服务名>.h"`。
+- **出波期间的代码路径不得调用会阻塞或依赖 `k_sem`/`k_mutex` 的上游 API。**
 
 ## 命名
 
-目录名用小写、下划线分隔的领域名（`pulse_engine`、`ecsp`、`current_sample`），
-不用 `util`、`common`、`misc` 这类装不满又装得下的名字。
+目录名用小写、下划线分隔的领域名，不用 `util`、`common`、`misc` 这类装不满又装得下的名字。
+服务上下文一律用不透明结构体，由 `app/` 以静态实例提供。
 
 ## 清单
 
-（空）
+| 服务 | 拥有什么 |
+| --- | --- |
+| `ecsp` | 字节环、解帧游标、会话状态、事务去重 FIFO、事件队列、上传模式、应答码映射 |
+| `pulse` | 运行状态与子态、串计数、电流异常记录、累加器、状态快照 |
+| `params` | 可配置参数、序列参数表、默认值、校验、启动门槛 |
+| `calib` | 6 档时长标定表、反插与外推、最近档选择 |
+| `nv` | A/B 页、记录格式、CRC、提交顺序（全仓唯一写 Flash 的地方） |
+
+帧编解码、参数校验、标定换算、NV 记录编解码**不得 include 依赖设备模型、内核或驱动的 Zephyr 头**，以便在主机侧编译与测试；纯算法头除外（当前仅 `<zephyr/sys/crc.h>`）。

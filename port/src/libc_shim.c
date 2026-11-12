@@ -1,7 +1,9 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
- * The Arm Compiler C library hooks that uart_console installs. Upstream's
+ * The Arm Compiler C library stdout hooks. The console driver that used to
+ * install them is gone (see ADR-0006), so nothing calls them today; they stay
+ * because this file is still the only fputc() implementation. Upstream's
  * version (lib/libc/armstdc/src/libc-hooks.c) also defines
  * __aeabi_errno_addr() in terms of the kernel's current thread, which this
  * runtime does not have; errno is provided by errno_shim.c instead.

@@ -257,3 +257,18 @@ void nihao_work_poll(void)
 		}
 	}
 }
+
+/*
+ * k_busy_wait(). The SEGGER RTT log backend calls it when a write has to be
+ * retried synchronously; the port has no scheduler, so this is the same
+ * bounded spin as the rest of the time services.
+ */
+void z_impl_k_busy_wait(uint32_t usec_to_wait)
+{
+	uint64_t deadline = clock_cycle_get() +
+			    ((uint64_t)usec_to_wait *
+			     ((uint64_t)CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / 1000000u));
+
+	while (clock_cycle_get() < deadline) {
+	}
+}

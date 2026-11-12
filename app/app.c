@@ -27,7 +27,7 @@
 LOG_MODULE_REGISTER(nihao, CONFIG_LOG_DEFAULT_LEVEL);
 
 #define LED0_NODE DT_ALIAS(led0)
-#define CONSOLE_NODE DT_CHOSEN(zephyr_console)
+#define UART_NODE DT_CHOSEN(zephyr_protocol_uart)
 
 #define RX_BUF_SIZE 64
 #define RX_RING_SIZE 256
@@ -36,7 +36,7 @@ LOG_MODULE_REGISTER(nihao, CONFIG_LOG_DEFAULT_LEVEL);
 #define RX_IDLE_TIMEOUT_US 1000
 
 static const struct led_dt_spec led = LED_DT_SPEC_GET(LED0_NODE);
-static const struct device *const console = DEVICE_DT_GET(CONSOLE_NODE);
+static const struct device *const uart = DEVICE_DT_GET(UART_NODE);
 
 static uint8_t rx_buf[2][RX_BUF_SIZE];
 static const uint8_t *volatile rx_free;
@@ -96,7 +96,7 @@ static void echo_pump(void)
 		uint32_t n = ring_buf_get(&rx_rb, chunk, sizeof(chunk));
 
 		tx_done = false;
-		if (uart_tx(console, chunk, n, SYS_FOREVER_US) != 0) {
+		if (uart_tx(uart, chunk, n, SYS_FOREVER_US) != 0) {
 			tx_done = true;
 			echo_dropped += n;
 			return;
@@ -121,9 +121,9 @@ int app_init(void)
 	log_set_timestamp_func(nihao_timestamp_get, 1000);
 
 	LOG_INF("nihao %s built %s %s", KERNEL_VERSION_STRING, __DATE__, __TIME__);
-	LOG_INF("sysclk %u Hz, console %s at %u baud", SystemCoreClock,
-		device_is_ready(console) ? "ready" : "NOT ready",
-		DT_PROP(CONSOLE_NODE, current_speed));
+	LOG_INF("sysclk %u Hz, uart %s at %u baud", SystemCoreClock,
+		device_is_ready(uart) ? "ready" : "NOT ready",
+		DT_PROP(UART_NODE, current_speed));
 
 	if (!led_is_ready_dt(&led)) {
 		return -ENODEV;
@@ -131,10 +131,10 @@ int app_init(void)
 
 	ring_buf_init(&rx_rb, RX_RING_SIZE, rx_ring_data);
 
-	if (device_is_ready(console)) {
-		(void)uart_callback_set(console, uart_cb, NULL);
+	if (device_is_ready(uart)) {
+		(void)uart_callback_set(uart, uart_cb, NULL);
 		rx_free = rx_buf[1];
-		if (uart_rx_enable(console, rx_buf[0], RX_BUF_SIZE, RX_IDLE_TIMEOUT_US) != 0) {
+		if (uart_rx_enable(uart, rx_buf[0], RX_BUF_SIZE, RX_IDLE_TIMEOUT_US) != 0) {
 			LOG_ERR("uart_rx_enable failed");
 		} else {
 			LOG_INF("async uart ready: dma tx/rx, rx ring %u B", RX_RING_SIZE);

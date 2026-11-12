@@ -19,8 +19,12 @@
 	compatible = "psg,g474qet6", "st,stm32g474";
 
 	chosen {
-		zephyr,console = &usart1;
-		zephyr,shell-uart = &usart1;
+		/*
+		 * There is no console: logs leave the MCU over SEGGER RTT, so the
+		 * only UART on this board belongs to the application. USART1 is
+		 * named here so the firmware never has to spell out the port.
+		 */
+		zephyr,protocol-uart = &usart1;
 		zephyr,flash = &flash0;
 		zephyr,sram = &sram0;
 	};

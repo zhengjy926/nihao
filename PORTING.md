@@ -12,18 +12,19 @@
 | `drivers/gpio/gpio_stm32.c` | GPIO API 实现 |
 | `soc/st/stm32/common/gpioport_mgr.c` | 每个端口的设备实例（4.5 把它们从 GPIO 驱动里移了出来） |
 | `drivers/pinctrl/pinctrl_stm32.c` | 按设备树做引脚复用 |
-| `drivers/clock_control/clock_stm32f2_f4_f7.c`、`clock_stm32_ll_common.c` | PLL 与外设时钟控制 |
+| `drivers/clock_control/clock_stm32g4.c`、`clock_stm32_ll_common.c` | PLL 与外设时钟控制 |
 | `drivers/interrupt_controller/intc_gpio_stm32.c`、`intc_exti_stm32.c` | 驱动无条件引用的 GPIO 中断底层代码 |
 | `drivers/pinctrl/common.c` | `pinctrl_lookup_state()`，UART 驱动会引用 |
 | `drivers/serial/uart_stm32.c` | UART API 实现，含 TX/RX DMA |
-| `drivers/dma/dma_stm32.c`、`dma_stm32_v1.c` | STM32 DMA 控制器（V1，F4 用的就是这一版） |
-| `drivers/console/uart_console.c` | `log_backend_uart` 所依赖的控制台后端 |
+| `drivers/dma/dma_stm32.c`、`dma_stm32_v2.c`、`dmamux_stm32.c` | STM32 DMA 控制器（G4 是 V2）与 DMAMUX |
 | `drivers/reset/reset_stm32.c` | RCC 复位控制器；UART 节点带有 `resets` 属性 |
 | `subsys/logging/log_core.c`、`log_msg.c`、`log_output.c`、`log_cache.c`、`log_mgmt.c` | 日志子系统，延迟模式（`mpsc_pbuf`，由 `log_process()` 排空） |
-| `subsys/logging/backends/log_backend_uart.c` | UART 日志后端（轮询式，不是异步变体） |
+| `subsys/logging/backends/log_backend_rtt.c` | 日志后端：SEGGER RTT 上行缓冲 |
+| `modules/segger/SEGGER_RTT_zephyr.c` | RTT 初始化（`SYS_INIT`）与 `zephyr_rtt_irq_lock/unlock` 锁钩子 |
+| `modules/debug/segger/SEGGER/SEGGER_RTT.c`、`Config/SEGGER_RTT_Conf.h` | RTT 本体（3.58，BSD 式许可），配置为中断锁 + 自定义锁函数 |
 | `lib/os/cbprintf.c`、`cbprintf_complete.c`、`cbprintf_packaged.c` | `LOG_*` 背后的格式化实现 |
 | `lib/utils/mpsc_pbuf.c` | 延迟日志背后的多生产者缓冲区 |
-| `lib/os/printk.c` | `snprintk()` 以及控制台使用的 printk 字符输出钩子 |
+| `lib/os/printk.c` | `snprintk()`；控制台的字符输出钩子在这里已无调用者（本工程没有控制台） |
 | `lib/libc/armstdc/` | Zephyr 的 Arm Compiler C 库胶水（`errno.c`） |
 | `soc/st/stm32/common/stm32_bitops.h`、`stm32_hsem.h`、`stm32_gpio_shared.h`、`pinctrl_soc.h` | SoC 辅助头文件 |
 | `modules/hal/cmsis_6`、`modules/hal/stm32/stm32cube/stm32g4xx`、`common_ll` | CMSIS 内核头文件与 STM32G4 设备/LL 头文件，以及 `drivers/src/stm32g4xx_ll_utils.c`（`LL_SetFlashLatency()`） |
@@ -45,7 +46,7 @@
 - `log_section_bounds.c` —— 提供日志子系统遍历的可迭代链表所需的 `_log_*_list_start`/`_end`；`scatter.sct` 用标记把每个链表括起来。
 - `rodata_bounds.s` —— `__rodata_region_start`/`_end`，即 cbprintf 在就地引用格式串之前要检查的 Flash 窗口。
 - `kernel_shim.c` —— 时间来自上游系统时基（`sys_clock_cycle_get_64()`），`k_sleep_ticks` 是有界自旋；计数信号量，其阻塞式 take 是有界的 `WFE` 自旋；以及 UART 用到的 `k_work_delayable` 调用，它们被并进 `nihao_work_poll()`（见[延迟工作](#延迟工作没有工作队列时的-k_work_delayable)）。
-- `libc_shim.c` —— 控制台用的 `__stdout_hook_install()`/`fputc()`。上游版本位于 `armstdc/src/libc-hooks.c`，但它同时用当前线程来定义 `__aeabi_errno_addr()`，而这里没有线程。
+- `libc_shim.c` —— 控制台用的 `__stdout_hook_install()`/`fputc()`。上游版本位于 `armstdc/src/libc-hooks.c`，但它同时用当前线程来定义 `__aeabi_errno_addr()`，而这里没有线程。控制台已经不存在，所以这两个钩子目前没有调用者；文件保留是因为它们仍是唯一的 `fputc()` 实现，删除与否要等下一次有人用到 C 库 stdio 时再定。
 
 对上游源码施加的补丁数：**0**。
 
@@ -110,11 +111,30 @@ CYCLES_PER_TICK = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PE
 - **槽位耗尽。** 第五个不同的 `k_work_delayable` 会从 `k_work_reschedule()` 拿到 `-ENOMEM`，而因为 `k_work_init_delayable()` 返回 `void`，失败不会被任何地方报告。症状：字节已经到达 UART，日志 alive 行里的 `irq` 在上涨，但应用始终拿不到 `UART_RX_RDY`，因为空闲冲刷从未触发。调大 `NIHAO_WORK_SLOTS`。
 - **64 位 `deadline` 比较**是普通的无符号运算；回绕需要约 10^11 秒的开机时间。
 
+## 日志后端：SEGGER RTT
+
+决策见 `docs/adr/0006-logging-over-rtt.md`。日志不占串口。USART1 是应用自己的数据口（后续跑协议），因此控制台被整个拿掉：`CONFIG_CONSOLE=n`，设备树里不再有 `zephyr,console`，`app/` 通过 `zephyr,protocol-uart` 这个 chosen 节点拿设备。`printk` 随之失去输出去处（`LOG_PRINTK=n`），诊断信息只剩 `LOG_*`。
+
+用的是上游的 `subsys/logging/backends/log_backend_rtt.c`，一字未改：
+
+- **模式是 `NO_BLOCK_SKIP`**（上游 `SEGGER_RTT_MODE` 的默认值）。缓冲满就整条丢弃，不阻塞、不关中断等主机。
+- **没有调试器时不挂死。** 主机不读，`RdOff` 不动，`SEGGER_RTT_WriteSkipNoLock()` 恒返回 0；后端第一次失败就把 `host_present` 置 false，之后不再重试。
+- **panic 有界。** panic 模式下 `on_write()` 会等主机取走，靠 `on_failed_write()` 在重试计数归零时放弃：`RETRY_CNT`（4）× `RETRY_DELAY_MS`（5）≈ 25 ms 后丢弃。
+- **不要改这两处。** 后端换成 `LOG_BACKEND_RTT_MODE_BLOCK`/`_OVERWRITE`，或把 `SEGGER_RTT_MODE` 改成 `BLOCK_IF_FIFO_FULL`，都会让一条日志有可能卡住固件（后者的 `_WriteBlocking` 在无主机时原地自旋）。日志没有资格让主循环停下。
+
+缓冲放在 `SEGGER_RTT.c` 的 `.bss` 里（0 号上行缓冲，`CONFIG_SEGGER_RTT_BUFFER_SIZE_UP`，1024 B），没有启用 `SEGGER_RTT_SECTION_CUSTOM`，所以 `scatter.sct` 不需要为它开执行域。
+
+锁：`LOG_BACKEND_RTT` 会 `select SEGGER_RTT_CUSTOM_LOCKING`，于是 `SEGGER_RTT_LOCK/UNLOCK` 走 `SEGGER_RTT_zephyr.c` 里的 `zephyr_rtt_irq_lock/unlock()`，最终是 `irq_lock()`。RTT 写不依赖调度器，中断里也能用。
+
+垫片补的是 `k_busy_wait()`：后端在同步重试路径上调它，端口在 `kernel_shim.c` 里给了一个有界自旋（`k_msleep()` 已由 `k_sleep_ticks()` 支撑，不需要新代码）。
+
+查看输出：J-Link 连上后打开 RTT Viewer（0 号终端，上行缓冲 1024 B），复位板子即可看到启动两行与每秒一行的 `alive`。
+
 ## 配置快照
 
 `config_gen/4.5.0/` 保存的是针对 `boards/psg/g474qet6` 跑一次 Zephyr configure 所产生的头文件。Keil 通过 `-imacros .../autoconf.h` 与 `-I config_gen/4.5.0` 消费它们。
 
-用 `python tools/gen_config.py` 重新生成。脚本会：
+用 `python tools/gen_config.py`（板子已默认成 `g474qet6`）重新生成。脚本会：
 
 1. 把 `tools/patches/0001-armclang-dts-preprocessor.patch` 应用到 Zephyr 树，然后还原；
 2. 以 `ZEPHYR_TOOLCHAIN_VARIANT=armclang` 配置，使生成的 `autoconf.h` 与 Arm Compiler 的 C 库匹配（GCC/picolibc 的配置会在 `errno` 上出问题）；
@@ -132,7 +152,7 @@ CYCLES_PER_TICK = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PE
 - **零长度标记数组必须从另一个编译单元索引。** 在定义它的单元里索引 `const char x[0]` 属于未定义行为，所以 `-O1` 会把整个循环删掉（修复前 `nihao_irq_table_load` 被编译成一条存储指令）。在一处定义标记，在遍历它们的地方以 `extern const struct ... []` 声明。
 - **`uart_rx_enable()` 的 `timeout` 是空闲冲刷超时，不是使能截止时间。** `SYS_FOREVER_US` 会让驱动把冲刷工作排到约 35 分钟之后（`K_USEC(INT32_MAX)`），于是短输入在 64 字节缓冲区填满之前永远到不了调用者。请用小值（这里是 1 ms）。
 - **延迟日志需要 `log_core_init()`。** `z_cstart()` 在任何 SYS_INIT 级别之前运行 `LOG_CORE_INIT()`，`z_log_msg_init()` 正是在那里做 `mpsc_pbuf_init()` 并设置当前消息缓冲区。只跑初始化级别会让 `curr_log_buffer` 为 NULL：此时 `LOG_INF()` 调用成功、花掉一个时间戳、然后丢弃消息，于是什么也到不了后端。`init_runner.c` 在同一位置调用了它。
-- **一个 UART 设备只有一个异步回调。** `LOG_BACKEND_UART_ASYNC` 的 `char_out` 会安装自己的回调，并等待只有该回调才会给出的信号量，所以应用若同时调用 `uart_callback_set()`（用于 RX），就会占掉后端的槽位，后端则永远等下去。日志后端与应用只能有一方拥有回调——本移植把它留给应用，让日志后端改为轮询（`LOG_BACKEND_UART`）。
+- **一个 UART 设备只有一个异步回调。** `LOG_BACKEND_UART_ASYNC` 的 `char_out` 会安装自己的回调，并等待只有该回调才会给出的信号量，所以应用若同时调用 `uart_callback_set()`（用于 RX），就会占掉后端的槽位，后端则永远等下去。日志后端与应用只能有一方拥有回调——本移植把它留给应用；换上 RTT 后端之后，日志根本不再碰任何 UART，这条约束只在有人把 UART 后端加回来时才重新生效。
 - **`clk_hse` 必须在板级设备树中启用。** SoC 的 dtsi 提供它时 `status = "disabled"`。若 PLL 选择 HSE 而节点仍处于禁用状态，`set_up_fixed_clock_sources()` 就不会启动晶振，`stm32_clock_control_init()` 会在 `PLLRDY` 上死等。症状：镜像在 `main` 之前挂住，`RCC->CR = 0x01007D83`（PLLON 置位、PLLRDY 清零、HSEON 清零）。
 - **`HAL_RCC_GetSysClockFreq()` 返回的是复位态 HSI 频率。** 它只被用一次，用于在 PLL 编程之前计算 Flash 等待周期，这是 `hal_shim.c` 现在唯一的内容。
 - **armlink 对被删段里的未定义符号仍然报错。** 即使 `--remove` 已经把 `HAL_RCC_OscConfig`、`HAL_RCC_ClockConfig`、`HAL_RCC_MCOConfig` 整段删掉，把上游 HAL RCC 文件整个编进来依然要求 `HAL_GetTick()`、`HAL_InitTick()`、`uwTickPrio`、`HAL_GPIO_Init()` 有定义——所以"只取一个函数"不是文件级选择能解决的：要么保留 `HAL_RCC_GetSysClockFreq()` 的垫片，要么把 HAL core 和它的 SysTick 时基一起链进来（那正是第二条时钟路径）。`stm32g4xx_ll_utils.c` 没有这个问题：它自足，除 `LL_SetFlashLatency()` 外的函数被正常 GC（`LL_mDelay`、`LL_Init1msTick`、`LL_PLL_ConfigSystemClock_*` 都在删除列表里）。上游版 `LL_SetFlashLatency` 带电源档位分支与有界轮询，比原来手写的 114 B 表多 212 B。
@@ -144,5 +164,5 @@ CYCLES_PER_TICK = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / CONFIG_SYS_CLOCK_TICKS_PE
 
 ## 后续工作
 
-1. 加一个能通过 UART 报告的故障处理程序（这是目前唯一仍会丢掉全部诊断信息的地方）。
+1. 加一个把故障信息经 RTT 报告出去的故障处理程序（`LOG_PANIC` 现在会写 RTT，但 fault 入口还没接）。
 2. 等有驱动需要时，再补 `k_mutex`/`k_work`（非延迟）垫片。

@@ -49,7 +49,7 @@
 | PF1-OSC_OUT | RCC_OSC_OUT | n/a | n/a | n/a | n/a | 8 MHz 晶振输出 |
 | PA13 | SYS_JTMS-SWDIO | n/a | n/a | n/a | n/a | SWDIO |
 | PA14 | SYS_JTCK-SWCLK | n/a | n/a | n/a | n/a | SWCLK |
-| PC4 | USART1_TX | n/a | Alternate Function Push Pull | No pull-up and no pull-down | Low | 上位机调试串口 |
-| PC5 | USART1_RX | n/a | Alternate Function Push Pull | No pull-up and no pull-down | Low | 上位机调试串口 |
-| PA2 | USART2_TX | n/a | Alternate Function Push Pull | No pull-up and no pull-down | Low | 上位机通信串口 |
-| PA3 | USART2_RX | n/a | Alternate Function Push Pull | No pull-up and no pull-down | Low | 上位机通信串口 |
+| PC4 | USART1_TX | n/a | Alternate Function Push Pull | No pull-up and no pull-down | Low | 单板调试版协议口 TX（编译期二选一） |
+| PC5 | USART1_RX | n/a | Alternate Function Push Pull | No pull-up and no pull-down | Low | 单板调试版协议口 RX（编译期二选一） |
+| PA2 | USART2_TX | n/a | Alternate Function Push Pull | No pull-up and no pull-down | Low | 发布版协议口 TX |
+| PA3 | USART2_RX | n/a | Alternate Function Push Pull | No pull-up and no pull-down | Low | 发布版协议口 RX |

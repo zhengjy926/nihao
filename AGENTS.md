@@ -7,6 +7,11 @@
   encryption client.
 - Building, regenerating the config snapshot or flashing misbehaves: read
   `docs/agents/environment.md` first.
+- Searching source: run `python tools\find_in_sources.py <regex> [paths...]`.
+  It decodes every file through the workstation's reader and skips
+  `third_party/`, `config_gen/` and `build_cfg/` by default, so a "no match" is
+  a fact; grep and `Select-String` read ciphertext on the container extensions
+  and report zero matches without an error.
 
 ## Agent skills
 
