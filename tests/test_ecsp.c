@@ -2,6 +2,7 @@
 #include "services/ecsp/ecsp.h"
 #include <assert.h>
 #include <string.h>
+#include <zephyr/sys/crc.h>
 
 static uint8_t sent[ECSP_MAX_FRAME];
 static size_t sent_length;
@@ -60,6 +61,7 @@ static void feed(const uint8_t *frame, size_t length)
 
 int main(void)
 {
+	assert(crc16_ansi((const uint8_t *)"123456789", 9) == 0x4b37);
 	const struct ecsp_command table[] = {{2, false, command}, {0x30, true, command}};
 	uint8_t bytes[ECSP_MAX_FRAME], seq = 7;
 	size_t length;

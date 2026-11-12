@@ -42,6 +42,7 @@ Individual files:
 - `zephyr/drivers/timer/cortex_m_systick.c`, `system_timer_generic.h`
 - `zephyr/subsys/logging/log_core.c`, `log_msg.c`, `log_output.c`, `log_cache.c`, `log_cache.h`, `log_mgmt.c`
 - `zephyr/subsys/logging/backends/log_backend_rtt.c`
+- `zephyr/subsys/crc/crc16_sw.c`
 - `zephyr/modules/segger/SEGGER_RTT_zephyr.c`,
   `modules/debug/segger/SEGGER/SEGGER_RTT.c`, `SEGGER_RTT.h`,
   `modules/debug/segger/Config/SEGGER_RTT_Conf.h`, `Global.h` (SEGGER RTT 3.58,

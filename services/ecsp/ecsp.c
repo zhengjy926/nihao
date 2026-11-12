@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #include "services/ecsp/ecsp.h"
 #include <string.h>
+#include <zephyr/sys/crc.h>
 
 #define RX_CAPACITY 1024u
 #define REPLAY_COUNT 8u
@@ -27,18 +28,6 @@ static unsigned int replay_next;
 static uint8_t pending_frame[ECSP_MAX_FRAME];
 static size_t pending_length;
 
-static uint16_t crc16(const uint8_t *data, size_t length)
-{
-	uint16_t crc = 0xffffu;
-	for (size_t i = 0; i < length; ++i) {
-		crc ^= data[i];
-		for (unsigned int bit = 0; bit < 8u; ++bit) {
-			crc = (crc & 1u) ? (uint16_t)((crc >> 1) ^ 0xa001u) : crc >> 1;
-		}
-	}
-	return crc;
-}
-
 static bool respond(uint8_t command, const uint8_t *payload, size_t length)
 {
 	uint8_t out[ECSP_MAX_FRAME];
@@ -52,7 +41,7 @@ static bool respond(uint8_t command, const uint8_t *payload, size_t length)
 	out[4] = command;
 	out[5] = board_address;
 	memcpy(out + 6, payload, length);
-	crc = crc16(out + 1, total - 4u);
+	crc = crc16_ansi(out + 1, total - 4u);
 	out[total - 3u] = (uint8_t)crc;
 	out[total - 2u] = (uint8_t)(crc >> 8);
 	out[total - 1u] = 0x0d;
@@ -162,7 +151,7 @@ void ecsp_poll(size_t byte_budget, uint64_t now_ms)
 			}
 		}
 		if (expected_size != 0u && frame_size == expected_size) {
-			uint16_t crc = crc16(frame + 1, frame_size - 4u);
+			uint16_t crc = crc16_ansi(frame + 1, frame_size - 4u);
 			bool valid = frame[frame_size - 1u] == 0x0d &&
 			    frame[frame_size - 3u] == (uint8_t)crc &&
 			    frame[frame_size - 2u] == (uint8_t)(crc >> 8);
@@ -184,7 +173,7 @@ void ecsp_poll(size_t byte_budget, uint64_t now_ms)
 				     expected_size < frame_size)) {
 					frame_size = expected_size = 0;
 				} else if (expected_size != 0u && expected_size == frame_size) {
-					uint16_t nested_crc = crc16(frame + 1, frame_size - 4u);
+					uint16_t nested_crc = crc16_ansi(frame + 1, frame_size - 4u);
 					if (frame[frame_size - 1u] == 0x0d &&
 					    frame[frame_size - 3u] == (uint8_t)nested_crc &&
 					    frame[frame_size - 2u] == (uint8_t)(nested_crc >> 8))

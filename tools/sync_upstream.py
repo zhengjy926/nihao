@@ -49,6 +49,7 @@ ZEPHYR_FILES = (
     "lib/os/printk.c",
     "lib/libc/armstdc/src/libc-hooks.c",
     "subsys/logging/log_core.c",
+    "subsys/crc/crc16_sw.c",
     "subsys/logging/log_msg.c",
     "subsys/logging/log_output.c",
     "subsys/logging/log_cache.c",

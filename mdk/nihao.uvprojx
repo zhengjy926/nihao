@@ -364,6 +364,16 @@
         </Files>
       </Group>
       <Group>
+        <GroupName>zephyr/crc</GroupName>
+        <Files>
+        <File>
+          <FileName>crc16_sw.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\third_party\zephyr\subsys\crc\crc16_sw.c</FilePath>
+        </File>
+        </Files>
+      </Group>
+      <Group>
         <GroupName>port</GroupName>
         <Files>
         <File>
