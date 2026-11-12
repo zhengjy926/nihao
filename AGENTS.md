@@ -1,17 +1,13 @@
 ## Environment
 
-- Machine-specific facts — which extensions are encrypted containers, which
-  processes may read or write them, console encoding, tool install paths — belong
-  to the workstation, not to this repo: the global agent instructions carry them.
-  This file does not restate them, so it stays true on a machine without the
-  encryption client.
+- Machine facts (transparent encryption, GBK console, tool install paths) live in
+  the workstation's global instructions; `docs/agents/environment.md` maps them
+  onto this repo's tooling. Never restate one machine's state as a rule for all.
+- Search with `python tools\find_in_sources.py <regex> [paths...]`: it exits 3,
+  not 1, while files are still `%TSD-Header-###%` containers, so "no match" stays
+  a fact.
 - Building, regenerating the config snapshot or flashing misbehaves: read
   `docs/agents/environment.md` first.
-- Searching source: run `python tools\find_in_sources.py <regex> [paths...]`.
-  It decodes every file through the workstation's reader and skips
-  `third_party/`, `config_gen/` and `build_cfg/` by default, so a "no match" is
-  a fact; grep and `Select-String` read ciphertext on the container extensions
-  and report zero matches without an error.
 
 ## Agent skills
 

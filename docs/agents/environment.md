@@ -12,6 +12,30 @@ tooling works. Read this before changing anything under `tools/`.
 
 ## Transparent file encryption
 
+**Check whether it applies before obeying any rule below.** Encryption is a
+property of the *reader*, not of the file, so the state cannot be inferred from a
+path or remembered from an earlier session:
+
+```powershell
+python tools\check_readers.py                   # one verdict per extension
+python tools\check_readers.py --show app\app.c  # one file, trusted view
+```
+
+| exit | meaning | what to do |
+| --- | --- | --- |
+| 0 | both views agree on every probed extension | nothing below constrains this checkout: `grep`, `Select-String` and the editor's file tools are all safe |
+| 4 | the pwsh/editor view is ciphertext | read through `python`, `cmd /c type` or `git show`; a match-free result from any other reader is void |
+| 5 | `python` itself sees a container | the client does not allow-list this interpreter, or the file is a bare container copied from another machine; stop until it is resolved |
+
+`--show` is the referee: it prints one file through the trusted view, so a
+suspected reader can be diffed against it line by line. Independently of the
+script, `git show HEAD:<path>` returns plaintext for a committed path even on an
+encrypted machine, because loose blobs and packfiles are not containers.
+
+The *process* decides membership, not the program name: `rg.exe` on `PATH` is
+allow-listed, while ripgrep linked into the editor host is not; `python` is
+allow-listed, while a PowerShell pipeline around it is not.
+
 An endpoint encryption client protects some file types. Files are stored as
 containers whose first bytes are `%TSD-Header-###%`; the client decrypts them
 transparently for allow-listed processes only.
@@ -40,7 +64,7 @@ plaintext**, so committed blobs and `git diff` are portable.
 
 ### Rules
 
-1. Read file content with the workstation reader
+1. When the probe exits 4, read file content with the workstation reader
    (`python %USERPROFILE%\.dsh\tools\readsrc.py`), never with PowerShell.
    `Select-String` on a container returns zero matches without error, which
    silently produces wrong conclusions.
@@ -53,8 +77,16 @@ plaintext**, so committed blobs and `git diff` are portable.
    with an untrusted writer (`Copy-Item`) rather than Python.
 5. Search sources with `python tools\find_in_sources.py <regex> [paths...]`. It
    decodes every file through the workstation reader and skips `third_party/`,
-   `config_gen/` and `build_cfg/` by default, so a "no match" is a fact rather
-   than a ciphertext read.
+   `config_gen/` and `build_cfg/` by default. It exits 3 and names the count when
+   it meets a container it cannot decode, so a printed "no match" is a fact only
+   when the exit code is 0 or 1.
+6. When containers are detected but no workstation reader is installed,
+   `tools/check_readers.py` prints `workstation reader: MISSING`. Do not fall back
+   to plain `open()`: fix the reader or ask, because every container read then
+   yields silent garbage instead of an error.
+7. A "no match" is a fact only when the same command also finds a token you know
+   is present — `SPDX-License-Identifier` is in every source file and is a cheap
+   positive control. Without the control, an empty result says nothing.
 
 ## Arm Compiler 6.23 and devicetree preprocessing
 

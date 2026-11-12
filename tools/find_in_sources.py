@@ -74,16 +74,25 @@ class NotText(Exception):
     """Not a file worth searching: too big, binary, or a container."""
 
 
+class Encrypted(Exception):
+    """A `%TSD-Header-###%` container: searching it would report a false miss."""
+
+
+# Present on disk whether or not the workstation reader can decode it, so the
+# check never depends on a reader being installed.
+CONTAINER_MAGIC = b"%TSD-Header-"
+
+
 def decode_file(path: Path, reader) -> str:
     data = path.read_bytes()
     if len(data) > MAX_BYTES:
         raise NotText("too big")
     if b"\x00" in data[:4096]:
         raise NotText("binary")
+    if data.startswith(CONTAINER_MAGIC):
+        raise Encrypted("container is still encrypted for this reader")
     if reader is None:
         return data.decode("utf-8", errors="replace")
-    if data.startswith(reader.MAGIC):
-        raise NotText("container is still encrypted for this reader")
     return reader.decode(data, None).text
 
 
@@ -126,13 +135,11 @@ def main(argv: list[str] | None = None) -> int:
 
     configure_output()
     reader = load_reader()
-    if reader is None:
-        print("note: workstation reader not found; reading files as plain text",
-              file=sys.stderr)
 
     pattern = re.compile(args.pattern, re.I if args.ignore_case else 0)
     matches = 0
     unreadable = 0
+    containers = 0
     truncated = False
 
     roots = []
@@ -147,6 +154,9 @@ def main(argv: list[str] | None = None) -> int:
         try:
             text = decode_file(path, reader)
         except NotText:
+            continue
+        except Encrypted:
+            containers += 1
             continue
         except (OSError, ValueError, LookupError) as exc:
             print(f"{display(path)}: {exc}", file=sys.stderr)
@@ -166,6 +176,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if truncated:
         print(f"note: stopped at {args.max} matches; raise with --max", file=sys.stderr)
+    if containers:
+        print(f"{containers} file(s) are still `%TSD-Header-###%` containers, so "
+              "this result is not a fact: run `python tools\\check_readers.py` "
+              "before concluding the pattern is absent.", file=sys.stderr)
+        unreadable += containers
     if matches == 0:
         print("no match", file=sys.stderr)
         return 3 if unreadable else 1

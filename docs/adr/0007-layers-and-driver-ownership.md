@@ -3,8 +3,8 @@
 在 ADR-0005（`app` / `services` 两层）之上新增 `drivers/` 层，并把"与硬件打交道"的判据写死：
 **上游有可用的驱动就用上游，没有或不覆盖本板用法才自己写**。
 
-依赖方向 `app → services → drivers → port → third_party`。`drivers/` 不得 include `services/`，`services/`
-也不得 include `drivers/` 的具体实现头，只认注入的 `ops` 函数表——这样脉冲引擎可以用假驱动在主机上跑多群多串。
+`app` 分别依赖 `services/` 与 `drivers/`，并在应用装配处适配接口。服务与驱动不互相包含头文件。脉冲引擎通过
+`pulse_hw.h` 定义所需的 `ops`，用物理单位提交时序，寄存器换算由驱动负责。主机测试可以注入假驱动。
 
 放弃的方案：
 
