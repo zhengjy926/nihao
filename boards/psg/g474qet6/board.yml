@@ -1,0 +1,6 @@
+board:
+  name: g474qet6
+  full_name: PSG pulse generator STM32G474QET6
+  vendor: psg
+  socs:
+    - name: stm32g474xx

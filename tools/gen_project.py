@@ -11,16 +11,16 @@ LEVELS = ("EARLY", "PRE_KERNEL_1", "PRE_KERNEL_2", "POST_KERNEL", "APPLICATION",
 
 GROUPS = {
     "board": [
-        ("startup_stm32f429xx.s", 2,
-         r"..\boards\alientek\f429igt6\startup_stm32f429xx.s"),
+        ("startup_stm32g474xx.s", 2,
+         r"..\boards\psg\g474qet6\startup_stm32g474xx.s"),
     ],
     "system": [
-        ("system_stm32f4xx.c", 1,
-         r"..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\soc\system_stm32f4xx.c"),
-        ("stm32f4xx_ll_dma.c", 1,
-         r"..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\drivers\src\stm32f4xx_ll_dma.c"),
-        ("stm32f4xx_ll_utils.c", 1,
-         r"..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\drivers\src\stm32f4xx_ll_utils.c"),
+        ("system_stm32g4xx.c", 1,
+         r"..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\soc\system_stm32g4xx.c"),
+        ("stm32g4xx_ll_dma.c", 1,
+         r"..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\drivers\src\stm32g4xx_ll_dma.c"),
+        ("stm32g4xx_ll_utils.c", 1,
+         r"..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\drivers\src\stm32g4xx_ll_utils.c"),
     ],
     "app": [
         ("main.c", 1, r"..\app\main.c"),
@@ -49,8 +49,8 @@ GROUPS = {
         ("gpio_stm32.c", 1, r"..\third_party\zephyr\drivers\gpio\gpio_stm32.c"),
         ("led_gpio.c", 1, r"..\third_party\zephyr\drivers\led\led_gpio.c"),
         ("pinctrl_stm32.c", 1, r"..\third_party\zephyr\drivers\pinctrl\pinctrl_stm32.c"),
-        ("clock_stm32f2_f4_f7.c", 1,
-         r"..\third_party\zephyr\drivers\clock_control\clock_stm32f2_f4_f7.c"),
+        ("clock_stm32g4.c", 1,
+         r"..\third_party\zephyr\drivers\clock_control\clock_stm32g4.c"),
         ("clock_stm32_ll_common.c", 1,
          r"..\third_party\zephyr\drivers\clock_control\clock_stm32_ll_common.c"),
         ("intc_gpio_stm32.c", 1,
@@ -67,8 +67,10 @@ GROUPS = {
          r"..\third_party\zephyr\drivers\pinctrl\common.c"),
         ("dma_stm32.c", 1,
          r"..\third_party\zephyr\drivers\dma\dma_stm32.c"),
-        ("dma_stm32_v1.c", 1,
-         r"..\third_party\zephyr\drivers\dma\dma_stm32_v1.c"),
+        ("dma_stm32_v2.c", 1,
+         r"..\third_party\zephyr\drivers\dma\dma_stm32_v2.c"),
+        ("dmamux_stm32.c", 1,
+         r"..\third_party\zephyr\drivers\dma\dmamux_stm32.c"),
         ("cortex_m_systick.c", 1,
          r"..\third_party\zephyr\drivers\timer\cortex_m_systick.c"),
     ],
@@ -104,18 +106,18 @@ INCLUDES = [
     r"..\config_gen\4.5.0",
     r"..\third_party\zephyr\include",
     r"..\third_party\zephyr\arch\common\include",
-    r"..\third_party\zephyr\soc\st\stm32\stm32f4x",
+    r"..\third_party\zephyr\soc\st\stm32\stm32g4x",
     r"..\third_party\zephyr\soc\st\stm32\common",
     r"..\third_party\zephyr\modules\cmsis_6",
     r"..\third_party\zephyr\lib\libc\armstdc\include",
     r"..\third_party\zephyr\lib\libc\common\include",
     r"..\third_party\modules\hal\cmsis_6\CMSIS\Core\Include",
-    r"..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\soc",
-    r"..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\drivers\include",
+    r"..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\soc",
+    r"..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\drivers\include",
     r"..\third_party\modules\hal\stm32\stm32cube\common_ll\include",
 ]
 
-DEFINES = "__ZEPHYR__=1,CORE_CM4,STM32F429xx,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,HSE_VALUE=25000000"
+DEFINES = "__ZEPHYR__=1,CORE_CM4,STM32G474xx,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,HSE_VALUE=8000000"
 MISC = "-imacros ../config_gen/4.5.0/zephyr/autoconf.h"
 
 SCATTER_HEADER = """\
@@ -123,9 +125,9 @@ SCATTER_HEADER = """\
 ;
 ; Note: armlink only honours explicit section selectors in regions without a
 ; fixed base address. Every iterable list therefore gets its own "+0" region.
-LR_IROM1 0x08000000 0x00100000
+LR_IROM1 0x08000000 0x00080000
 {
-  ER_IROM1 0x08000000 0x00100000
+  ER_IROM1 0x08000000 0x00080000
   {
     *(RESET, +First)
     *(InRoot$$Sections)
@@ -166,7 +168,7 @@ SCATTER_TAIL = """
     *(.nihao_device_end, +Last)
   }
 
-  RW_IRAM1 0x20000000 0x0002DE00
+  RW_IRAM1 0x20000000 0x00015E00
   {
     .ANY (+RW +ZI)
   }
@@ -215,12 +217,12 @@ SCATTER_TAIL = """
     *(.nihao_log_mpsc_pbuf_end)
   }
 
-  ER_HEAP 0x2002DE00 UNINIT 0x00000200
+  ER_HEAP 0x20015E00 UNINIT 0x00000200
   {
     *(HEAP)
   }
 
-  ER_STACK 0x2002E000 UNINIT 0x00002000
+  ER_STACK 0x20016000 UNINIT 0x00002000
   {
     *(STACK)
   }
@@ -285,14 +287,14 @@ def project_text(include_path: str, groups: str) -> str:
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>STM32F429IGTx</Device>
+          <Device>STM32G474QETx</Device>
           <Vendor>STMicroelectronics</Vendor>
           <PackID>Keil.STM32F4xx_DFP.3.1.0</PackID>
           <PackURL>https://www.keil.com/pack/</PackURL>
-          <Cpu>IRAM(0x20000000,0x00030000) IROM(0x08000000,0x00100000) CPUTYPE("Cortex-M4") FPU2 CLOCK(25000000) ELITTLE</Cpu>
+          <Cpu>IRAM(0x20000000,0x00018000) IROM(0x08000000,0x00080000) CPUTYPE("Cortex-M4") FPU2 CLOCK(8000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
-          <FlashDriverDll>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0STM32F4xx_1024 -FS08000000 -FL0100000 -FP0($$Device:STM32F429IGTx$CMSIS\\Flash\\STM32F4xx_1024.FLM))</FlashDriverDll>
+          <FlashDriverDll>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0STM32G47x-8x_512 -FS08000000 -FL080000 -FP0($$Device:STM32G474QETx$CMSIS\\Flash\\STM32G47x-8x_512.FLM))</FlashDriverDll>
           <DeviceId>0</DeviceId>
           <RegisterFile></RegisterFile>
           <MemoryEnv></MemoryEnv>
@@ -304,7 +306,7 @@ def project_text(include_path: str, groups: str) -> str:
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile>$$Device:STM32F429IGTx$CMSIS\\SVD\\STM32F429x.svd</SFDFile>
+          <SFDFile>$$Device:STM32G474QETx$CMSIS\\SVD\\STM32G474.svd</SFDFile>
           <bCustSvd>0</bCustSvd>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
@@ -494,13 +496,13 @@ def project_text(include_path: str, groups: str) -> str:
               <Ocm4><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></Ocm4>
               <Ocm5><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></Ocm5>
               <Ocm6><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></Ocm6>
-              <IRAM><Type>0</Type><StartAddress>0x20000000</StartAddress><Size>0x30000</Size></IRAM>
-              <IROM><Type>0</Type><StartAddress>0x8000000</StartAddress><Size>0x100000</Size></IROM>
+              <IRAM><Type>0</Type><StartAddress>0x20000000</StartAddress><Size>0x18000</Size></IRAM>
+              <IROM><Type>0</Type><StartAddress>0x8000000</StartAddress><Size>0x80000</Size></IROM>
               <XRAM><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></XRAM>
               <OCR_RVCT1><Type>1</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT1>
               <OCR_RVCT2><Type>1</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT2>
               <OCR_RVCT3><Type>1</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT3>
-              <OCR_RVCT4><Type>1</Type><StartAddress>0x8000000</StartAddress><Size>0x100000</Size></OCR_RVCT4>
+              <OCR_RVCT4><Type>1</Type><StartAddress>0x8000000</StartAddress><Size>0x80000</Size></OCR_RVCT4>
               <OCR_RVCT5><Type>1</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT5>
               <OCR_RVCT6><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT6>
               <OCR_RVCT7><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT7>
@@ -572,7 +574,7 @@ def project_text(include_path: str, groups: str) -> str:
             <ScatterFile>.\\scatter.sct</ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
-            <Misc>--entry Reset_Handler --remove --diag_suppress L6314W</Misc>
+            <Misc>--entry Reset_Handler --remove --diag_suppress L6314W --datacompressor=off</Misc>
             <LinkerInputFile></LinkerInputFile>
             <DisabledWarnings></DisabledWarnings>
           </LDads>

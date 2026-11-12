@@ -2,9 +2,9 @@
 ;
 ; Note: armlink only honours explicit section selectors in regions without a
 ; fixed base address. Every iterable list therefore gets its own "+0" region.
-LR_IROM1 0x08000000 0x00100000
+LR_IROM1 0x08000000 0x00080000
 {
-  ER_IROM1 0x08000000 0x00100000
+  ER_IROM1 0x08000000 0x00080000
   {
     *(RESET, +First)
     *(InRoot$$Sections)
@@ -79,7 +79,7 @@ LR_IROM1 0x08000000 0x00100000
     *(.nihao_device_end, +Last)
   }
 
-  RW_IRAM1 0x20000000 0x0002DE00
+  RW_IRAM1 0x20000000 0x00015E00
   {
     .ANY (+RW +ZI)
   }
@@ -128,12 +128,12 @@ LR_IROM1 0x08000000 0x00100000
     *(.nihao_log_mpsc_pbuf_end)
   }
 
-  ER_HEAP 0x2002DE00 UNINIT 0x00000200
+  ER_HEAP 0x20015E00 UNINIT 0x00000200
   {
     *(HEAP)
   }
 
-  ER_STACK 0x2002E000 UNINIT 0x00002000
+  ER_STACK 0x20016000 UNINIT 0x00002000
   {
     *(STACK)
   }

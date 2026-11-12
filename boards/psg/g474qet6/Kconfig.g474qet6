@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_G474QET6
+	select SOC_STM32G474XX

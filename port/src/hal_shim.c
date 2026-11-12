@@ -4,11 +4,11 @@
  * Replacements for the STM32 HAL/LL helpers referenced by
  * clock_stm32_ll_common.c.
  *
- * LL_SetFlashLatency() comes from upstream stm32f4xx_ll_utils.c: that file is
+ * LL_SetFlashLatency() comes from upstream stm32g4xx_ll_utils.c: that file is
  * self-contained and also gives the voltage-scaling aware table for free.
  *
  * HAL_RCC_GetSysClockFreq() stays here. Compiling upstream
- * stm32f4xx_hal_rcc.c was tried: armlink reports the HAL_GetTick(),
+ * stm32g4xx_hal_rcc.c was tried: armlink reports the HAL_GetTick(),
  * HAL_InitTick(), uwTickPrio and HAL_GPIO_Init() references of the sections it
  * drops anyway (HAL_RCC_OscConfig, HAL_RCC_ClockConfig, HAL_RCC_MCOConfig), so
  * that file cannot be linked without pulling in the HAL core and its SysTick
@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 
-#include <stm32f4xx.h>
+#include <stm32g4xx.h>
 
 uint32_t HAL_RCC_GetSysClockFreq(void)
 {

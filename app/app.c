@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#include <system_stm32f4xx.h>
+#include <system_stm32g4xx.h>
 
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>

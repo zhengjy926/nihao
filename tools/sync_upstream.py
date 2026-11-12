@@ -20,7 +20,7 @@ ZEPHYR_DIRS = (
     "lib/libc/armstdc",
     "lib/libc/common/include",
     "soc/st/stm32/common",
-    "soc/st/stm32/stm32f4x",
+    "soc/st/stm32/stm32g4x",
     "modules/cmsis_6",
 )
 
@@ -30,7 +30,7 @@ ZEPHYR_FILES = (
     "drivers/gpio/gpio_stm32.h",
     "drivers/led/led_gpio.c",
     "drivers/pinctrl/pinctrl_stm32.c",
-    "drivers/clock_control/clock_stm32f2_f4_f7.c",
+    "drivers/clock_control/clock_stm32g4.c",
     "drivers/clock_control/clock_stm32_ll_common.c",
     "drivers/clock_control/clock_stm32_ll_common.h",
     "drivers/interrupt_controller/intc_gpio_stm32.c",
@@ -42,8 +42,9 @@ ZEPHYR_FILES = (
     "drivers/reset/reset_stm32.c",
     "drivers/pinctrl/common.c",
     "drivers/dma/dma_stm32.c",
-    "drivers/dma/dma_stm32_v1.c",
+    "drivers/dma/dma_stm32_v2.c",
     "drivers/dma/dma_stm32.h",
+    "drivers/dma/dmamux_stm32.c",
     "drivers/timer/cortex_m_systick.c",
     "drivers/timer/system_timer_generic.h",
     "lib/os/printk.c",
@@ -63,17 +64,17 @@ ZEPHYR_FILES = (
 
 MODULE_DIRS = (
     "hal/cmsis_6/CMSIS/Core/Include",
-    "hal/stm32/stm32cube/stm32f4xx/drivers/include",
+    "hal/stm32/stm32cube/stm32g4xx/drivers/include",
     "hal/stm32/stm32cube/common_ll/include",
 )
 
 MODULE_FILES = (
-    "hal/stm32/stm32cube/stm32f4xx/soc/stm32f4xx.h",
-    "hal/stm32/stm32cube/stm32f4xx/soc/stm32f429xx.h",
-    "hal/stm32/stm32cube/stm32f4xx/soc/system_stm32f4xx.h",
-    "hal/stm32/stm32cube/stm32f4xx/soc/system_stm32f4xx.c",
-    "hal/stm32/stm32cube/stm32f4xx/drivers/src/stm32f4xx_ll_dma.c",
-    "hal/stm32/stm32cube/stm32f4xx/drivers/src/stm32f4xx_ll_utils.c",
+    "hal/stm32/stm32cube/stm32g4xx/soc/stm32g4xx.h",
+    "hal/stm32/stm32cube/stm32g4xx/soc/stm32g474xx.h",
+    "hal/stm32/stm32cube/stm32g4xx/soc/system_stm32g4xx.h",
+    "hal/stm32/stm32cube/stm32g4xx/soc/system_stm32g4xx.c",
+    "hal/stm32/stm32cube/stm32g4xx/drivers/src/stm32g4xx_ll_dma.c",
+    "hal/stm32/stm32cube/stm32g4xx/drivers/src/stm32g4xx_ll_utils.c",
 )
 
 

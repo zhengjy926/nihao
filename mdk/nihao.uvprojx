@@ -14,14 +14,14 @@
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>STM32F429IGTx</Device>
+          <Device>STM32G474QETx</Device>
           <Vendor>STMicroelectronics</Vendor>
           <PackID>Keil.STM32F4xx_DFP.3.1.0</PackID>
           <PackURL>https://www.keil.com/pack/</PackURL>
-          <Cpu>IRAM(0x20000000,0x00030000) IROM(0x08000000,0x00100000) CPUTYPE("Cortex-M4") FPU2 CLOCK(25000000) ELITTLE</Cpu>
+          <Cpu>IRAM(0x20000000,0x00018000) IROM(0x08000000,0x00080000) CPUTYPE("Cortex-M4") FPU2 CLOCK(8000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
-          <FlashDriverDll>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0STM32F4xx_1024 -FS08000000 -FL0100000 -FP0($$Device:STM32F429IGTx$CMSIS\Flash\STM32F4xx_1024.FLM))</FlashDriverDll>
+          <FlashDriverDll>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0STM32G47x-8x_512 -FS08000000 -FL080000 -FP0($$Device:STM32G474QETx$CMSIS\Flash\STM32G47x-8x_512.FLM))</FlashDriverDll>
           <DeviceId>0</DeviceId>
           <RegisterFile></RegisterFile>
           <MemoryEnv></MemoryEnv>
@@ -33,7 +33,7 @@
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile>$$Device:STM32F429IGTx$CMSIS\SVD\STM32F429x.svd</SFDFile>
+          <SFDFile>$$Device:STM32G474QETx$CMSIS\SVD\STM32G474.svd</SFDFile>
           <bCustSvd>0</bCustSvd>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
@@ -223,13 +223,13 @@
               <Ocm4><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></Ocm4>
               <Ocm5><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></Ocm5>
               <Ocm6><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></Ocm6>
-              <IRAM><Type>0</Type><StartAddress>0x20000000</StartAddress><Size>0x30000</Size></IRAM>
-              <IROM><Type>0</Type><StartAddress>0x8000000</StartAddress><Size>0x100000</Size></IROM>
+              <IRAM><Type>0</Type><StartAddress>0x20000000</StartAddress><Size>0x18000</Size></IRAM>
+              <IROM><Type>0</Type><StartAddress>0x8000000</StartAddress><Size>0x80000</Size></IROM>
               <XRAM><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></XRAM>
               <OCR_RVCT1><Type>1</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT1>
               <OCR_RVCT2><Type>1</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT2>
               <OCR_RVCT3><Type>1</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT3>
-              <OCR_RVCT4><Type>1</Type><StartAddress>0x8000000</StartAddress><Size>0x100000</Size></OCR_RVCT4>
+              <OCR_RVCT4><Type>1</Type><StartAddress>0x8000000</StartAddress><Size>0x80000</Size></OCR_RVCT4>
               <OCR_RVCT5><Type>1</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT5>
               <OCR_RVCT6><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT6>
               <OCR_RVCT7><Type>0</Type><StartAddress>0x0</StartAddress><Size>0x0</Size></OCR_RVCT7>
@@ -265,9 +265,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>-imacros ../config_gen/4.5.0/zephyr/autoconf.h</MiscControls>
-              <Define>__ZEPHYR__=1,CORE_CM4,STM32F429xx,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,HSE_VALUE=25000000</Define>
+              <Define>__ZEPHYR__=1,CORE_CM4,STM32G474xx,USE_FULL_LL_DRIVER,USE_HAL_DRIVER,HSE_VALUE=8000000</Define>
               <Undefine></Undefine>
-              <IncludePath>..;..\config_gen\4.5.0;..\third_party\zephyr\include;..\third_party\zephyr\arch\common\include;..\third_party\zephyr\soc\st\stm32\stm32f4x;..\third_party\zephyr\soc\st\stm32\common;..\third_party\zephyr\modules\cmsis_6;..\third_party\zephyr\lib\libc\armstdc\include;..\third_party\zephyr\lib\libc\common\include;..\third_party\modules\hal\cmsis_6\CMSIS\Core\Include;..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\soc;..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\drivers\include;..\third_party\modules\hal\stm32\stm32cube\common_ll\include</IncludePath>
+              <IncludePath>..;..\config_gen\4.5.0;..\third_party\zephyr\include;..\third_party\zephyr\arch\common\include;..\third_party\zephyr\soc\st\stm32\stm32g4x;..\third_party\zephyr\soc\st\stm32\common;..\third_party\zephyr\modules\cmsis_6;..\third_party\zephyr\lib\libc\armstdc\include;..\third_party\zephyr\lib\libc\common\include;..\third_party\modules\hal\cmsis_6\CMSIS\Core\Include;..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\soc;..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\drivers\include;..\third_party\modules\hal\stm32\stm32cube\common_ll\include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -301,7 +301,7 @@
             <ScatterFile>.\scatter.sct</ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
-            <Misc>--entry Reset_Handler --remove --diag_suppress L6314W</Misc>
+            <Misc>--entry Reset_Handler --remove --diag_suppress L6314W --datacompressor=off</Misc>
             <LinkerInputFile></LinkerInputFile>
             <DisabledWarnings></DisabledWarnings>
           </LDads>
@@ -312,9 +312,9 @@
         <GroupName>board</GroupName>
         <Files>
         <File>
-          <FileName>startup_stm32f429xx.s</FileName>
+          <FileName>startup_stm32g474xx.s</FileName>
           <FileType>2</FileType>
-          <FilePath>..\boards\alientek\f429igt6\startup_stm32f429xx.s</FilePath>
+          <FilePath>..\boards\psg\g474qet6\startup_stm32g474xx.s</FilePath>
         </File>
         </Files>
       </Group>
@@ -322,19 +322,19 @@
         <GroupName>system</GroupName>
         <Files>
         <File>
-          <FileName>system_stm32f4xx.c</FileName>
+          <FileName>system_stm32g4xx.c</FileName>
           <FileType>1</FileType>
-          <FilePath>..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\soc\system_stm32f4xx.c</FilePath>
+          <FilePath>..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\soc\system_stm32g4xx.c</FilePath>
         </File>
         <File>
-          <FileName>stm32f4xx_ll_dma.c</FileName>
+          <FileName>stm32g4xx_ll_dma.c</FileName>
           <FileType>1</FileType>
-          <FilePath>..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\drivers\src\stm32f4xx_ll_dma.c</FilePath>
+          <FilePath>..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\drivers\src\stm32g4xx_ll_dma.c</FilePath>
         </File>
         <File>
-          <FileName>stm32f4xx_ll_utils.c</FileName>
+          <FileName>stm32g4xx_ll_utils.c</FileName>
           <FileType>1</FileType>
-          <FilePath>..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\drivers\src\stm32f4xx_ll_utils.c</FilePath>
+          <FilePath>..\third_party\modules\hal\stm32\stm32cube\stm32g4xx\drivers\src\stm32g4xx_ll_utils.c</FilePath>
         </File>
         </Files>
       </Group>
@@ -447,9 +447,9 @@
           <FilePath>..\third_party\zephyr\drivers\pinctrl\pinctrl_stm32.c</FilePath>
         </File>
         <File>
-          <FileName>clock_stm32f2_f4_f7.c</FileName>
+          <FileName>clock_stm32g4.c</FileName>
           <FileType>1</FileType>
-          <FilePath>..\third_party\zephyr\drivers\clock_control\clock_stm32f2_f4_f7.c</FilePath>
+          <FilePath>..\third_party\zephyr\drivers\clock_control\clock_stm32g4.c</FilePath>
         </File>
         <File>
           <FileName>clock_stm32_ll_common.c</FileName>
@@ -492,9 +492,14 @@
           <FilePath>..\third_party\zephyr\drivers\dma\dma_stm32.c</FilePath>
         </File>
         <File>
-          <FileName>dma_stm32_v1.c</FileName>
+          <FileName>dma_stm32_v2.c</FileName>
           <FileType>1</FileType>
-          <FilePath>..\third_party\zephyr\drivers\dma\dma_stm32_v1.c</FilePath>
+          <FilePath>..\third_party\zephyr\drivers\dma\dma_stm32_v2.c</FilePath>
+        </File>
+        <File>
+          <FileName>dmamux_stm32.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\third_party\zephyr\drivers\dma\dmamux_stm32.c</FilePath>
         </File>
         <File>
           <FileName>cortex_m_systick.c</FileName>
