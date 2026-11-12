@@ -176,7 +176,7 @@ so a serial terminal shows nothing. Both steps work without uVision:
 PSG pulse generator board, STM32G474QET6 (LQFP128), 8 MHz HSE, 170 MHz SYSCLK,
 512 KB flash, 96 KB of SRAM used (SRAM1+SRAM2; CCM is untouched). `BOOT0` is tied
 low, so the image at `0x08000000` runs after every reset. Pin assignments live in
-`docs/MCU引脚功能映射表.md`; the board devicetree restates only the pins the
+`docs/MCU外设与引脚配置.md`; the board devicetree restates only the pins the
 firmware uses.
 
 ## Compiler flags

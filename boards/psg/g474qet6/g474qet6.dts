@@ -4,7 +4,7 @@
  * PSG pulse generator board, STM32G474QET6 (LQFP128).
  * Only the nodes used by the bare-metal port are enabled; everything else
  * stays disabled as defined by the upstream SoC dtsi. Pin assignments come
- * from docs/MCU引脚功能映射表.md - that table is the single source of truth.
+ * from docs/MCU外设与引脚配置.md - that table is the single source of truth.
  */
 
 /dts-v1/;
