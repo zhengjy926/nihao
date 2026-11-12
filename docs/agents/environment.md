@@ -79,6 +79,12 @@ Set the environment variable once per machine (or pass the flag ad hoc) when a
 tool lives somewhere unusual. Nothing machine-specific should be hard-coded in
 committed scripts.
 
+STM32 device families are **not** under `D:\Keil_v5\ARM\PACK`. `TOOLS.INI` sets a
+separate pack repository (`RTEPATH`, `D:\Arm\Packs` on this workstation), and that
+is where `Keil.STM32G4xx_DFP/2.0.0` and friends live. A `.pack` file sitting next
+to the install root is only an archive: unless the same package appears under
+`RTEPATH`, uVision cannot resolve the `$$Device:...$$` paths in a `.uvprojx`.
+
 ## uVision batch builds
 
 `UV4.exe -b project.uvprojx -j0 -o build.log` can return before the log is

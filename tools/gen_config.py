@@ -11,6 +11,7 @@ import argparse
 import os
 import shutil
 import subprocess
+import time
 import sys
 from pathlib import Path
 
@@ -36,6 +37,50 @@ HEADERS = (
 def run(cmd: list[str], cwd: Path | None = None) -> None:
     print("+", " ".join(cmd))
     subprocess.run(cmd, cwd=str(cwd) if cwd else None, check=True)
+
+
+def remove_build_dir(build: Path) -> None:
+    """Windows keeps handles on build_cfg after a killed build; retry briefly."""
+    for attempt in range(6):
+        try:
+            shutil.rmtree(build)
+            return
+        except PermissionError:
+            if attempt == 5:
+                raise
+            time.sleep(1.0)
+
+
+PATCH_TARGET = "cmake/compiler/armclang/generic.cmake"
+
+
+def git(zephyr: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "-C", str(zephyr), *args],
+                          capture_output=True, text=True)
+
+
+def restore_patch_target(zephyr: Path) -> bool:
+    """Put the one file the DTS patch touches back to its upstream content."""
+    res = git(zephyr, "checkout", "--", PATCH_TARGET)
+    if res.returncode != 0:
+        print(f"failed to restore {PATCH_TARGET}: {res.stderr.strip()}\n"
+              f"  recover with: git -C {zephyr} checkout -- {PATCH_TARGET}",
+              file=sys.stderr)
+        return False
+    return True
+
+
+def prepare_patch_target(zephyr: Path) -> bool:
+    """A run that died between apply and revert leaves the patch behind."""
+    res = git(zephyr, "diff", "--quiet", "--", PATCH_TARGET)
+    if res.returncode == 0:
+        return True
+    if res.returncode == 1:
+        print(f"{PATCH_TARGET} still carries the patch; restoring it first",
+              file=sys.stderr)
+        return restore_patch_target(zephyr)
+    print(f"cannot inspect {PATCH_TARGET}: {res.stderr.strip()}", file=sys.stderr)
+    return False
 
 
 def main() -> int:
@@ -94,7 +139,11 @@ def main() -> int:
     env["ZEPHYR_BASE"] = str(zephyr)
     env["ARMCLANG_TOOLCHAIN_PATH"] = keil_root
 
+    if not prepare_patch_target(zephyr):
+        return 3
+
     applied = False
+    failure = 0
     try:
         subprocess.run(["git", "-C", str(zephyr), "apply", "--check", str(patch)],
                        check=True, env=env)
@@ -103,7 +152,7 @@ def main() -> int:
         applied = True
 
         if build.exists():
-            shutil.rmtree(build)
+            remove_build_dir(build)
 
         run([
             str(cmake),
@@ -122,11 +171,13 @@ def main() -> int:
              "heap_constants_h"])
     except subprocess.CalledProcessError as exc:
         print(f"configuration generation failed (exit {exc.returncode})", file=sys.stderr)
-        return exc.returncode or 3
+        failure = exc.returncode or 3
     finally:
-        if applied:
-            subprocess.run(["git", "-C", str(zephyr), "checkout", "--",
-                            "cmake/compiler/armclang/generic.cmake"], check=False)
+        if applied and not restore_patch_target(zephyr):
+            failure = failure or 3
+
+    if failure:
+        return failure
 
     generated = build / "zephyr" / "include" / "generated" / "zephyr"
     out_dir.mkdir(parents=True, exist_ok=True)
