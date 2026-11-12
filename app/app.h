@@ -17,7 +17,8 @@ int app_init(void);
 
 /**
  * Run one step of the super-loop: poll deferred work, process a bounded number
- * of ECSP bytes, drain logs, and service LED and handshake deadlines.
+ * of ECSP bytes, drain logs, and service the LED deadline. ECSP owns its
+ * handshake and heartbeat deadlines.
  *
  * Non-blocking; call it in a tight loop from main().
  */

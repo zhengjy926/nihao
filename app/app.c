@@ -41,42 +41,28 @@ static const struct device *const uart = DEVICE_DT_GET(UART_NODE);
 static uint8_t rx_buf[2][RX_BUF_SIZE];
 static const uint8_t *volatile rx_free;
 static volatile bool tx_done = true;
+static volatile bool tx_finished;
+static volatile bool tx_success;
 static uint8_t tx_frame[ECSP_MAX_FRAME];
+static ecsp_t ecsp_context;
+static const uint8_t software_version[7] = {'1', '.', '0', '.', '0', '.', '0'};
 
 static uint32_t toggles;
 static uint64_t next_blink_ms;
-static uint64_t next_handshake_ms;
 
-static bool ecsp_send(const uint8_t *frame, size_t length, void *user)
+static enum ecsp_link_result ecsp_send(const uint8_t *frame, size_t length, void *user)
 {
 	ARG_UNUSED(user);
-	if (!tx_done || length > sizeof(tx_frame)) return false;
+	if (!tx_done) return ECSP_LINK_BUSY;
+	if (length > sizeof(tx_frame)) return ECSP_LINK_FAULT;
 	memcpy(tx_frame, frame, length);
 	tx_done = false;
 	if (uart_tx(uart, tx_frame, length, SYS_FOREVER_US) != 0) {
 		tx_done = true;
-		return false;
+		return ECSP_LINK_FAULT;
 	}
-	return true;
+	return ECSP_LINK_ACCEPTED;
 }
-
-static uint8_t board_command(uint8_t command, const uint8_t *request,
-			     size_t length, uint8_t *response,
-			     size_t *response_length, void *user)
-{
-	static const uint8_t version[] = {'1', '.', '0', '.', '0', '.', '0'};
-	ARG_UNUSED(request);
-	ARG_UNUSED(user);
-	if (command != 2u) return 4u;
-	if (length != 0u) return 2u;
-	memcpy(response, version, sizeof(version));
-	*response_length = sizeof(version);
-	return 0u;
-}
-
-static const struct ecsp_command commands[] = {
-	{2u, false, board_command},
-};
 
 uint32_t nihao_sem_timeout_count(void);
 uint32_t nihao_unhandled_irq_count(void);
@@ -99,11 +85,18 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 	case UART_RX_RDY: {
 		const uint8_t *data = evt->data.rx.buf + evt->data.rx.offset;
 		uint32_t len = evt->data.rx.len;
-		ecsp_receive(data, len);
+		ecsp_receive(&ecsp_context, data, len);
 		break;
 	}
 	case UART_TX_DONE:
 		tx_done = true;
+		tx_success = true;
+		tx_finished = true;
+		break;
+	case UART_TX_ABORTED:
+		tx_done = true;
+		tx_success = false;
+		tx_finished = true;
 		break;
 	default:
 		break;
@@ -123,7 +116,7 @@ int app_init(void)
 		return -ENODEV;
 	}
 
-	ecsp_init(3u, 2u, commands, ARRAY_SIZE(commands), ecsp_send, NULL);
+	ecsp_init(&ecsp_context, 3u, 2u, software_version, NULL, 0u, ecsp_send, NULL);
 
 	if (device_is_ready(uart)) {
 		(void)uart_callback_set(uart, uart_cb, NULL);
@@ -142,14 +135,15 @@ void app_task(void)
 {
 	uint64_t now;
 
-	ecsp_poll(64u, runtime_millis());
+	if (tx_finished) {
+		bool success = tx_success;
+		tx_finished = false;
+		ecsp_tx_complete(&ecsp_context, success, (uint32_t)runtime_millis());
+	}
+	ecsp_poll(&ecsp_context, 64u, 1u, (uint32_t)runtime_millis());
 	runtime_poll();
 
 	now = runtime_millis();
-	if (now >= next_handshake_ms && !ecsp_handshaken()) {
-		ecsp_announce();
-		next_handshake_ms = now + 1000u;
-	}
 	if (now < next_blink_ms) {
 		return;
 	}
