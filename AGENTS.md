@@ -5,7 +5,6 @@
   to the workstation, not to this repo: the global agent instructions carry them.
   This file does not restate them, so it stays true on a machine without the
   encryption client.
-- Read sources with `python tools/read_source.py <path>`.
 - Building, regenerating the config snapshot or flashing misbehaves: read
   `docs/agents/environment.md` first.
 

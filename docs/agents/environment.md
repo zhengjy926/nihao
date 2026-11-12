@@ -20,7 +20,7 @@ Observed reader matrix (same file, same user):
 
 | Reader | Result |
 | --- | --- |
-| `python.exe` (also `tools/read_source.py`) | plaintext |
+| `python.exe` (also the workstation `readsrc`) | plaintext |
 | `cmd.exe` (`type`) | plaintext |
 | `ripgrep.exe` | plaintext |
 | `git` (including `hash-object`, `diff --no-index`) | plaintext |
@@ -30,7 +30,7 @@ Observed reader matrix (same file, same user):
 
 Observed per extension (repo scan with an untrusted reader):
 
-- encrypted on disk: `.c`, `.uvprojx`, some `.txt` written by trusted tools
+- encrypted on disk: `.c`, `.s`, `.uvprojx`, some `.txt` written by trusted tools
 - plaintext: `.h`, `.s`, `.dts`, `.sct`, `.ps1`/`.py`, `.md`
 
 Writer side: files written by a trusted process (`python`, `armclang`, `uVision`)
@@ -40,11 +40,12 @@ plaintext**, so committed blobs and `git diff` are portable.
 
 ### Rules
 
-1. Read file content with Python (`tools/read_source.py`), never with
-   PowerShell. `Select-String` on a container returns zero matches without
-   error, which silently produces wrong conclusions.
-2. `tools/source_io.py` rejects `%TSD-Header-###%` input with an explicit error; use
-   `read_text()` for any content read in new scripts.
+1. Read file content with the workstation reader
+   (`python %USERPROFILE%\.dsh\tools\readsrc.py`), never with PowerShell.
+   `Select-String` on a container returns zero matches without error, which
+   silently produces wrong conclusions.
+2. `readsrc` rejects a `%TSD-Header-###%` input with an explicit error; route the
+   reads of a new script through it instead of `open()`.
 3. Do not "fix" a container by rewriting it byte-for-byte; let the owning tool
    write it.
 4. `.s` files must stay **plaintext**: `armasm` is not allow-listed, so a container

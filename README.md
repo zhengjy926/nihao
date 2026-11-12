@@ -48,11 +48,12 @@ Or open `mdk/nihao.uvprojx` in uVision and press Build.
 Output: `mdk/Objects/nihao.axf` and `nihao.hex`.
 
 On this workstation the source files are stored as transparent-encryption
-containers, so PowerShell `Get-Content` sees ciphertext. Read sources with:
+containers, so PowerShell `Get-Content` sees ciphertext. Read them with the
+workstation's reader, which raises on a container instead of returning ciphertext:
 
 ```powershell
-python tools\read_source.py third_party\zephyr\kernel\device.c --head 40
-python tools\read_source.py third_party\zephyr\include\zephyr\kernel.h --grep z_timeout
+python $env:USERPROFILE\.dsh\tools\readsrc.py third_party\zephyr\kernel\device.c --head 40
+python $env:USERPROFILE\.dsh\tools\readsrc.py third_party\zephyr\include\zephyr\kernel.h --grep z_timeout
 ```
 
 See [docs/agents/environment.md](./docs/agents/environment.md) for the full
