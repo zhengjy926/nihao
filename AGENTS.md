@@ -1,15 +1,13 @@
 ## Environment
 
-- Transparent file encryption on this workstation: `.c`, `.s`, `.dts` and
-  `.uvprojx` files are ciphertext containers on disk. `python`, `cmd /c type`,
-  `ripgrep`, `git` and the Keil toolchain (armclang/armasm/armlink/UV4) read
-  plaintext; PowerShell/.NET (`Get-Content`, `Select-String`, `[IO.File]`) and
-  the VS Code host read `%TSD-Header-###%`.
-- Read sources with `python tools/read_source.py <path>`; never with
-  `Get-Content`/`Select-String` (the latter returns 0 matches *silently* and
-  corrupts conclusions).
-- Build/config quirks (AC6 `-E`, venv Python, uVision batch builds, BOOT0):
-  see `docs/agents/environment.md`.
+- Machine-specific facts — which extensions are encrypted containers, which
+  processes may read or write them, console encoding, tool install paths — belong
+  to the workstation, not to this repo: the global agent instructions carry them.
+  This file does not restate them, so it stays true on a machine without the
+  encryption client.
+- Read sources with `python tools/read_source.py <path>`.
+- Building, regenerating the config snapshot or flashing misbehaves: read
+  `docs/agents/environment.md` first.
 
 ## Agent skills
 

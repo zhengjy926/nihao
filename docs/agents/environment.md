@@ -3,6 +3,13 @@
 Things about this workstation that are invisible in the code but decide whether
 tooling works. Read this before changing anything under `tools/`.
 
+> **Scope.** This file describes the *development machine*, not the project. The
+> encryption client, the GBK console, the Keil pack layout and the `D:\Zephyr`
+> tree exist only here; on another machine, skip the matching sections and keep
+> the build steps in `README.md`. The authoritative machine facts live in the
+> global agent instructions — this file explains what they mean for this repo's
+> tooling.
+
 ## Transparent file encryption
 
 An endpoint encryption client protects some file types. Files are stored as
