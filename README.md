@@ -102,11 +102,12 @@ python tools\gen_config.py
 
 | Path | Contents |
 | --- | --- |
-| `boards/alientek/f429igt6/` | Devicetree and Kconfig board definition, used only to generate headers |
+| `boards/alientek/f429igt6/` | Devicetree and Kconfig board definition, plus the CMSIS startup file |
 | `config_gen/4.5.0/` | Committed snapshot of `autoconf.h`, `devicetree_generated.h`, `version.h`, syscall and kobject headers |
 | `third_party/` | Unmodified upstream sources (Zephyr 4.5.0, CMSIS, STM32 HAL headers) |
 | `port/` | The shim layer: everything this port has to provide itself |
-| `src/` | Application, CMSIS startup file, scatter-described memory layout |
+| `app/` | Application: entry point, super-loop, and the services it drives |
+| `services/` | Board-independent functional domains; see `services/README.md` |
 | `tools/` | Config generation, project generation, batch build, upstream sync |
 
 See [PORTING.md](./PORTING.md) for what was changed, why, and what is still

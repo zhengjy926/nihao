@@ -10,8 +10,9 @@ from pathlib import Path
 LEVELS = ("EARLY", "PRE_KERNEL_1", "PRE_KERNEL_2", "POST_KERNEL", "APPLICATION", "SMP")
 
 GROUPS = {
-    "startup": [
-        ("startup_stm32f429xx.s", 2, r"..\src\startup_stm32f429xx.s"),
+    "board": [
+        ("startup_stm32f429xx.s", 2,
+         r"..\boards\alientek\f429igt6\startup_stm32f429xx.s"),
     ],
     "system": [
         ("system_stm32f4xx.c", 1,
@@ -22,8 +23,11 @@ GROUPS = {
          r"..\third_party\modules\hal\stm32\stm32cube\stm32f4xx\drivers\src\stm32f4xx_ll_utils.c"),
     ],
     "app": [
-        ("main.c", 1, r"..\src\main.c"),
+        ("main.c", 1, r"..\app\main.c"),
     ],
+    # Intentionally empty: the group is emitted with no files so the directory
+    # shows up in uVision before its first source file exists.
+    "services": [],
     "port": [
         ("rodata_bounds.s", 2, r"..\port\src\rodata_bounds.s"),
         ("init_runner.c", 1, r"..\port\src\init_runner.c"),
@@ -93,7 +97,9 @@ GROUPS = {
 }
 
 INCLUDES = [
-    r"..\port\include",
+    # Repository root, so project headers are written "app/app.h" and the
+    # include line carries the layer it comes from.
+    r"..",
     r"..\config_gen\4.5.0",
     r"..\third_party\zephyr\include",
     r"..\third_party\zephyr\arch\common\include",
@@ -248,12 +254,15 @@ def groups_xml() -> str:
                 f"          <FilePath>{fpath}</FilePath>\n"
                 "        </File>"
             )
+        files_xml = "\n".join(entries)
+        if files_xml:
+            files_xml += "\n"
         out.append(
             "      <Group>\n"
             f"        <GroupName>{name}</GroupName>\n"
             "        <Files>\n"
-            + "\n".join(entries)
-            + "\n        </Files>\n      </Group>"
+            + files_xml
+            + "        </Files>\n      </Group>"
         )
     return "\n".join(out)
 
