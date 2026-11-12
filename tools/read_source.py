@@ -19,6 +19,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from source_io import EncryptedContentError, read_text  # noqa: E402
 
+# Keep CJK source and docs readable when stdout is a GBK console (the default on
+# this workstation): without this, piping through PowerShell mangles the text and
+# invites wrong conclusions about a file's encoding.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,

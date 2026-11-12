@@ -92,6 +92,11 @@ written when another uVision instance is running. `tools/build.py` deletes the
 log first, waits for it to be refreshed (default 120 s), prints it, and returns
 uVision's exit code. Exit code 1 means warnings, 2 means errors.
 
+Piping these scripts into `Select-Object -First N` closes the pipe once it has
+enough lines: Python is killed mid-run and the child it spawned (CMake, uVision)
+is orphaned, usually still holding `build_cfg/` open so the next run fails in
+`rmtree` with `PermissionError`. Redirect to a file and read its tail instead.
+
 ## Target board
 
 PSG pulse generator board, STM32G474QET6 (LQFP128), 8 MHz HSE, 170 MHz SYSCLK,
